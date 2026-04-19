@@ -1,0 +1,13 @@
+{
+  "name": "kingme",
+  "private": true,
+  "version": "0.0.0",
+  "packageManager": "pnpm@10.0.0",
+  "scripts": {
+    "dev": "echo \"Wire app-level dev scripts after frontend/backend are created\"",
+    "build": "echo \"Wire build scripts after apps are created\"",
+    "lint": "echo \"Wire lint scripts after apps are created\"",
+    "test": "echo \"Wire test scripts after apps are created\""
+  }
+}
+
