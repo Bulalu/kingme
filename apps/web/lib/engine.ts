@@ -100,6 +100,16 @@ export interface AgentMoveResponse {
   search?: SearchPayload;
 }
 
+export interface PlayTurnResponse {
+  applied_move: MovePayload;
+  agent: AgentSummary | null;
+  agent_move: MovePayload | null;
+  state: StatePayload;
+  legal_moves: MovePayload[];
+  winner: ApiWinner;
+  search?: SearchPayload | null;
+}
+
 // ── Fetch wrappers ─────────────────────────────────────────────
 
 async function post<T>(path: string, body: unknown): Promise<T> {
@@ -144,6 +154,18 @@ export function agentMove(agentId: string, state: StatePayload) {
   return post<AgentMoveResponse>("/v1/agent-move", {
     agent_id: agentId,
     state,
+  });
+}
+
+export function playTurnApi(
+  agentId: string,
+  state: StatePayload,
+  movePdn: string,
+) {
+  return post<PlayTurnResponse>("/v1/play-turn", {
+    agent_id: agentId,
+    state,
+    move_pdn: movePdn,
   });
 }
 

@@ -113,3 +113,22 @@ class AgentMoveResponse(BaseModel):
     winner: ColorLiteral | None
     search: SearchPayload
 
+
+class PlayTurnRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    agent_id: str
+    state: StatePayload
+    move_pdn: str
+
+
+class PlayTurnResponse(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    applied_move: MovePayload
+    agent: AgentSummary | None
+    agent_move: MovePayload | None
+    state: StatePayload
+    legal_moves: list[MovePayload]
+    winner: ColorLiteral | None
+    search: SearchPayload | None = None

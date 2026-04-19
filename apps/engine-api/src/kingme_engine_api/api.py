@@ -13,6 +13,8 @@ from .schemas import (
     HealthPayload,
     LegalMovesRequest,
     LegalMovesResponse,
+    PlayTurnRequest,
+    PlayTurnResponse,
     StatePayload,
 )
 from .service import EngineService
@@ -79,5 +81,15 @@ def create_app() -> FastAPI:
         except ValueError as exc:
             raise HTTPException(status_code=400, detail=str(exc)) from exc
 
-    return app
+    @app.post("/v1/play-turn", response_model=PlayTurnResponse)
+    def play_turn(request: PlayTurnRequest) -> PlayTurnResponse:
+        try:
+            return service.play_turn(request.agent_id, request.state, request.move_pdn)
+        except KeyError as exc:
+            raise HTTPException(status_code=404, detail=str(exc)) from exc
+        except FileNotFoundError as exc:
+            raise HTTPException(status_code=409, detail=str(exc)) from exc
+        except ValueError as exc:
+            raise HTTPException(status_code=400, detail=str(exc)) from exc
 
+    return app

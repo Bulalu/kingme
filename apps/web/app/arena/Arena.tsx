@@ -18,17 +18,18 @@ import {
   agentMove,
   apiSideToUi,
   apiWinnerToUi,
-  applyMoveApi,
   coordToSquare,
   findMoveByEndpoints,
   getInitialState,
   getLegalMoves,
   optimisticApplyMove,
+  playTurnApi,
   rowsToBoard,
   squareToCoord,
   type ApplyMoveResponse,
   type AgentMoveResponse,
   type MovePayload,
+  type PlayTurnResponse,
   type StatePayload,
 } from "@/lib/engine";
 
@@ -383,6 +384,44 @@ function ArenaGame({
     [],
   );
 
+  const applyPlayTurnResponse = useCallback(
+    (next: PlayTurnResponse) => {
+      setApiState(next.state);
+      setLegal(next.legal_moves);
+      const w = apiWinnerToUi(next.winner);
+      if (w) {
+        setStatus(w);
+        return;
+      }
+      if (next.agent_move) {
+        const fromCoord = squareToCoord(next.agent_move.path[0]);
+        const toCoord = squareToCoord(
+          next.agent_move.path[next.agent_move.path.length - 1],
+        );
+        setLastMove({ from: fromCoord, to: toCoord });
+        setHistory((h) => [
+          ...h,
+          {
+            side: "black",
+            from: fromCoord,
+            to: toCoord,
+            captured: next.agent_move!.capture_count,
+            promoted: next.agent_move!.promotes,
+          },
+        ]);
+        if (next.agent_move.capture_count >= 2) {
+          comboKey.current += 1;
+          setCombo({
+            count: next.agent_move.capture_count,
+            side: "black",
+            key: comboKey.current,
+          });
+        }
+      }
+    },
+    [],
+  );
+
   // Boot: fetch initial state, then if it's the AI's turn, ask sinza to open.
   useEffect(() => {
     const ctrl = new AbortController();
@@ -498,19 +537,9 @@ function ArenaGame({
           setPending(true);
 
           try {
-            // Confirm with the engine (it owns authoritative state).
-            const applied = await applyMoveApi(previous, mv.pdn);
-            setApiState(applied.state);
-            setLegal(applied.legal_moves);
-            const w = apiWinnerToUi(applied.winner);
-            if (w) {
-              setStatus(w);
-              return;
-            }
-
-            // Sinza's reply.
-            const agentResp = await agentMove(agent.id, applied.state);
-            applyResponse(agentResp, "black");
+            // One backend round trip: confirm the human move and get Sinza's reply.
+            const turnResp = await playTurnApi(agent.id, previous, mv.pdn);
+            applyPlayTurnResponse(turnResp);
           } catch (e) {
             // Roll back to the engine's last known good state.
             const msg = e instanceof Error ? e.message : String(e);
@@ -530,7 +559,7 @@ function ArenaGame({
     [
       agent.id,
       apiState,
-      applyResponse,
+      applyPlayTurnResponse,
       board,
       boot,
       legal,
