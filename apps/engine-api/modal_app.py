@@ -20,7 +20,15 @@ image = (
 )
 
 
-@app.function(image=image, cpu=4.0, memory=4096, timeout=300)
+@app.function(
+    image=image,
+    cpu=4.0,
+    memory=4096,
+    timeout=300,
+    # Keep one container warm so the first move of a session (and the first
+    # move after any idle stretch) doesn't pay a cold-start penalty.
+    min_containers=1,
+)
 @modal.asgi_app(label="kingme-engine-api")
 def fastapi_app():
     # Imported inside the function so the Modal CLI can discover this app

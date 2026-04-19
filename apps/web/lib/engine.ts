@@ -211,3 +211,46 @@ export function findMoveByEndpoints(
     (m) => m.path[0] === fromSq && m.path[m.path.length - 1] === toSq,
   );
 }
+
+// Apply a MovePayload to a StatePayload optimistically (visual only).
+// Used to update the board immediately on click without waiting for the
+// engine round-trip. The engine's authoritative response should overwrite
+// this once it lands; on disagreement the server wins.
+//
+// Note: `no_progress_count` and `repetition_counts` are intentionally NOT
+// recomputed accurately here — they only matter for draw detection over
+// many moves, and the engine reset will fix them on the next response.
+export function optimisticApplyMove(
+  state: StatePayload,
+  mv: MovePayload,
+): StatePayload {
+  const grid = state.rows.map((row) => row.split(""));
+  const [fr, fc] = squareToCoord(mv.path[0]);
+  const piece = grid[fr][fc];
+
+  grid[fr][fc] = ".";
+  // Each pair of adjacent squares in `path` that's 2 apart is a jump;
+  // the captured piece sits on the midpoint.
+  for (let i = 0; i < mv.path.length - 1; i++) {
+    const [ar, ac] = squareToCoord(mv.path[i]);
+    const [br, bc] = squareToCoord(mv.path[i + 1]);
+    if (Math.abs(ar - br) === 2) {
+      grid[(ar + br) / 2][(ac + bc) / 2] = ".";
+    }
+  }
+
+  const [er, ec] = squareToCoord(mv.path[mv.path.length - 1]);
+  let placed = piece;
+  if (mv.promotes) {
+    if (piece === "r") placed = "R";
+    else if (piece === "w") placed = "W";
+  }
+  grid[er][ec] = placed;
+
+  return {
+    ...state,
+    rows: grid.map((row) => row.join("")),
+    side_to_move: state.side_to_move === "red" ? "white" : "red",
+    forced_square: null,
+  };
+}

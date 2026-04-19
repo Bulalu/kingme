@@ -23,6 +23,7 @@ import {
   findMoveByEndpoints,
   getInitialState,
   getLegalMoves,
+  optimisticApplyMove,
   rowsToBoard,
   squareToCoord,
   type ApplyMoveResponse,
@@ -463,21 +464,57 @@ function ArenaGame({
       if (selected) {
         const mv = findMoveByEndpoints(legalFrom, selected, [r, c]);
         if (mv) {
+          // Optimistic UI: snap the piece to its destination immediately so
+          // there's no perceptible lag. The engine round-trip happens in the
+          // background and overwrites this state when it lands.
+          const optimistic = optimisticApplyMove(apiState, mv);
+          const fromCoord = squareToCoord(mv.path[0]);
+          const toCoord = squareToCoord(mv.path[mv.path.length - 1]);
+          const previous = apiState;
+
+          setApiState(optimistic);
+          setLegal([]);
+          setLastMove({ from: fromCoord, to: toCoord });
+          setHistory((h) => [
+            ...h,
+            {
+              side: "red",
+              from: fromCoord,
+              to: toCoord,
+              captured: mv.capture_count,
+              promoted: mv.promotes,
+            },
+          ]);
+          if (mv.capture_count >= 2) {
+            comboKey.current += 1;
+            setCombo({
+              count: mv.capture_count,
+              side: "red",
+              key: comboKey.current,
+            });
+          }
           setSelected(null);
           setLegalFrom([]);
           setPending(true);
-          try {
-            const applied = await applyMoveApi(apiState, mv.pdn);
-            applyResponse(applied, "red");
 
-            // If game continues and it's now sinza's turn, ask for the reply.
-            if (!applied.winner) {
-              const agentResp = await agentMove(agent.id, applied.state);
-              applyResponse(agentResp, "black");
+          try {
+            // Confirm with the engine (it owns authoritative state).
+            const applied = await applyMoveApi(previous, mv.pdn);
+            setApiState(applied.state);
+            setLegal(applied.legal_moves);
+            const w = apiWinnerToUi(applied.winner);
+            if (w) {
+              setStatus(w);
+              return;
             }
+
+            // Sinza's reply.
+            const agentResp = await agentMove(agent.id, applied.state);
+            applyResponse(agentResp, "black");
           } catch (e) {
-            // Revert highlight; surface error in the status panel.
+            // Roll back to the engine's last known good state.
             const msg = e instanceof Error ? e.message : String(e);
+            setApiState(previous);
             setBootError(msg);
             setBoot("error");
           } finally {
