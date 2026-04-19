@@ -25,9 +25,12 @@ image = (
     cpu=4.0,
     memory=4096,
     timeout=300,
-    # Keep one container warm so the first move of a session (and the first
-    # move after any idle stretch) doesn't pay a cold-start penalty.
+    # Keep one container running at all times so requests don't need to boot
+    # the service from zero.
     min_containers=1,
+    # Let any extra containers from short bursts stay hot for longer before
+    # Modal scales them back down.
+    scaledown_window=20 * 60,
 )
 @modal.asgi_app(label="kingme-engine-api")
 def fastapi_app():
