@@ -1,6 +1,29 @@
 # kingme
 
-Monorepo for the `kingme` product.
+`kingme` is the product repo for a checkers experience built around our own engine agent, `sinza`.
+
+The goal is simple:
+
+- a strong playable bot
+- a polished web experience
+- a clean separation between product code and engine/training code
+
+This repo is where the product gets assembled. The heavy experimentation still happens in the separate engine lab repo, and `kingme` consumes the strongest released engine configuration from that work.
+
+Today that means:
+
+- the web app will be the player-facing experience
+- Convex will own product state and realtime app data
+- the Python `engine-api` will own legal moves, state transitions, and bot replies
+- `sinza` is currently served as our strongest owned alpha-beta release on Modal
+
+If you are new to the repo, think of it as:
+
+- brand + gameplay UX
+- engine serving
+- app-state orchestration
+
+not as the place where model training happens.
 
 Initial structure:
 
@@ -23,5 +46,11 @@ Current intention:
 - `convex` owns app state, realtime subscriptions, sessions, and leaderboards.
 - `packages/*` hold reusable code that should not live inside one app.
 
-See [docs/architecture.md](/Users/elishabulalu/Desktop/kingme/docs/architecture.md) for the recommended split and rollout order.
+Good entry points:
 
+- [docs/architecture.md](/Users/elishabulalu/Desktop/kingme/docs/architecture.md)
+  overall repo split and rollout order
+- [docs/engine.md](/Users/elishabulalu/Desktop/kingme/docs/engine.md)
+  how the serving engine works and why it is separate from training
+- [docs/API.md](/Users/elishabulalu/Desktop/kingme/docs/API.md)
+  request/response contract for the frontend and other agents
