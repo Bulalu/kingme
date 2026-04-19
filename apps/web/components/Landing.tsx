@@ -7,8 +7,8 @@ import {
   Roster,
   Roadmap,
   Leaderboard,
-  WinsGallery,
-  HowItWorks,
+  // WinsGallery,
+  // HowItWorks,
   SubmitAgent,
   Footer,
 } from "./sections";
@@ -73,9 +73,9 @@ export default function Landing() {
       <Marquee />
       <Roster />
       <Roadmap />
-      <HowItWorks />
+      {/* <HowItWorks /> */}
       <Leaderboard />
-      <WinsGallery />
+      {/* <WinsGallery /> */}
       <SubmitAgent />
       <Footer />
     </>

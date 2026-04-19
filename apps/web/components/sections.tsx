@@ -752,8 +752,8 @@ export function Footer() {
         </div>
       </div>
       <div className="km-footer-bot">
-        <div>© 2026 kingme labs · trained in a basement</div>
-        <div>built to lose gracefully (you, not us)</div>
+        <div>© 2026 kingme labs · trained in a bedroom</div>
+        <div>built by bulalu · made to lose gracefully (you, not us)</div>
       </div>
     </footer>
   );
