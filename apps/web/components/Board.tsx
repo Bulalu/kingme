@@ -227,17 +227,9 @@ export default function Board({
     null,
   );
   const [status, setStatus] = useState<Side | "draw" | null>(null);
-  const [thinking, setThinking] = useState(false);
 
-  // reset when mode changes
-  useEffect(() => {
-    setBoard(startBoard());
-    setTurn("red");
-    setSelected(null);
-    setLegalFrom([]);
-    setLastMove(null);
-    setStatus(null);
-  }, [mode]);
+  // Render-derived: AI is "thinking" between the human move and its reply timeout firing.
+  const thinking = mode === "play" && turn === "black" && !status;
 
   // demo mode: both sides auto-play, restart on end
   useEffect(() => {
@@ -272,13 +264,11 @@ export default function Board({
     if (mode !== "play") return;
     if (status) return;
     if (turn !== "black") return;
-    setThinking(true);
     const t = setTimeout(
       () => {
         const mv = pickAIMove(board, "black", "normal");
         if (!mv) {
           setStatus(winner(board) || "red");
-          setThinking(false);
           return;
         }
         const nb = applyMove(board, mv);
@@ -287,7 +277,6 @@ export default function Board({
         const w = winner(nb);
         if (w) setStatus(w);
         else setTurn("red");
-        setThinking(false);
       },
       650 + Math.random() * 500,
     );

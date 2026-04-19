@@ -20,10 +20,10 @@
   --black-piece: #1a1614;
   --board-dark: #2a1f18;
   --board-light: #e7d6b8;
-  --serif: "Playfair Display", "Times New Roman", serif;
-  --display: "Anton", "Oswald", "Arial Narrow", sans-serif;
-  --body: "Inter", system-ui, sans-serif;
-  --mono: "JetBrains Mono", "SF Mono", Menlo, monospace;
+  --serif: var(--font-playfair), "Playfair Display", "Times New Roman", serif;
+  --display: var(--font-anton), "Anton", "Oswald", "Arial Narrow", sans-serif;
+  --body: var(--font-inter), "Inter", system-ui, sans-serif;
+  --mono: var(--font-jetbrains), "JetBrains Mono", "SF Mono", Menlo, monospace;
   --grain-opacity: 0.035;
 }
 
