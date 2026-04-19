@@ -146,6 +146,10 @@ Current endpoints:
 - `POST /v1/state/apply-move`
 - `POST /v1/agent-move`
 
+Full request/response contract:
+
+- [API.md](/Users/elishabulalu/Desktop/kingme/docs/API.md)
+
 That is enough for:
 
 - validating player moves
