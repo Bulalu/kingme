@@ -4,6 +4,7 @@
 // Ported from the design package (sections.jsx).
 
 import { useMemo, useState, type ReactNode } from "react";
+import Link from "next/link";
 import Board from "./Board";
 
 // ── Hero ───────────────────────────────────────────────────────
@@ -61,11 +62,9 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <p className="km-hero-sub">{t.sub}</p>
 
           <div className="km-hero-ctas">
-            {/* Arena page isn't built yet — primary CTA is a visual placeholder.
-                When arena ships, route this to it instead of toggling mode. */}
-            <button className="km-btn km-btn-primary" type="button">
+            <Link className="km-btn km-btn-primary" href="/arena">
               {`▶ ${t.cta}`}
-            </button>
+            </Link>
             <button
               className={
                 "km-btn km-btn-ghost " +
@@ -254,9 +253,12 @@ export function Roster() {
               <div className="km-agent-foot">
                 <span className="km-agent-style">{a.style}</span>
                 {a.status === "live" ? (
-                  <button className="km-btn km-btn-primary km-btn-sm">
+                  <Link
+                    className="km-btn km-btn-primary km-btn-sm"
+                    href="/arena"
+                  >
                     play {a.name.toLowerCase()} →
-                  </button>
+                  </Link>
                 ) : (
                   <button className="km-btn km-btn-ghost km-btn-sm">
                     notify when ready
