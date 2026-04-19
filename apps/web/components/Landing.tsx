@@ -7,8 +7,8 @@ import {
   Roster,
   Roadmap,
   Leaderboard,
-  WinsGallery,
-  HowItWorks,
+  // WinsGallery,
+  // HowItWorks,
   SubmitAgent,
   Footer,
 } from "./sections";
@@ -51,8 +51,9 @@ export default function Landing() {
     document.documentElement.style.setProperty("--accent", accent);
   }, [variant, accent]);
 
+  // Arena page isn't built yet — nav CTA is a visual placeholder.
+  // For now it just scrolls back to the hero; wire to /arena when shipped.
   const onPlayClick = () => {
-    setMode("play");
     if (heroRef.current) {
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -73,9 +74,9 @@ export default function Landing() {
       <Marquee />
       <Roster />
       <Roadmap />
-      <HowItWorks />
+      {/* <HowItWorks /> */}
       <Leaderboard />
-      <WinsGallery />
+      {/* <WinsGallery /> */}
       <SubmitAgent />
       <Footer />
     </>

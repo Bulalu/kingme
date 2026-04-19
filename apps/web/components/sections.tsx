@@ -61,11 +61,10 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <p className="km-hero-sub">{t.sub}</p>
 
           <div className="km-hero-ctas">
-            <button
-              className="km-btn km-btn-primary"
-              onClick={() => setMode("play")}
-            >
-              {mode === "play" ? "↻ new game" : `▶ ${t.cta}`}
+            {/* Arena page isn't built yet — primary CTA is a visual placeholder.
+                When arena ships, route this to it instead of toggling mode. */}
+            <button className="km-btn km-btn-primary" type="button">
+              {`▶ ${t.cta}`}
             </button>
             <button
               className={
@@ -73,6 +72,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 (mode === "demo" ? "km-btn-active" : "")
               }
               onClick={() => setMode("demo")}
+              type="button"
             >
               {t.cta2}
             </button>
@@ -130,7 +130,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 demoSpeedMs={850}
               />
               <div className="km-board-footer">
-                <span>agent · sinza-v3 · 61M params</span>
+                <span>agent · sinza-v1 · 61M params</span>
                 <span>difficulty · hard</span>
               </div>
             </div>
@@ -195,7 +195,7 @@ export function Roster() {
       games: "41,287",
       winRate: "96.9%",
       params: "61M",
-      version: "v3",
+      version: "v1",
       bio: "Sinza plays fast and talks faster. He learned checkers the only way that matters — fourteen million games against himself — and now he wants yours. He drinks through the whole match. It does not help you.",
       quote: '"king me, then king me again. i can wait."',
       style: "aggressive · loves forced captures",
@@ -752,8 +752,19 @@ export function Footer() {
         </div>
       </div>
       <div className="km-footer-bot">
-        <div>© 2026 kingme labs · trained in a basement</div>
-        <div>built to lose gracefully (you, not us)</div>
+        <div>© 2026 kingme labs · trained in a bedroom</div>
+        <div>
+          built by{" "}
+          <a
+            className="km-footer-link"
+            href="https://x.com/elisha_bulalu"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            bulalu
+          </a>{" "}
+          · made to lose gracefully (you, not us)
+        </div>
       </div>
     </footer>
   );
