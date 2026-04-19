@@ -32,7 +32,7 @@ image = (
 )
 
 
-@app.function(image=image, cpu=2.0, memory=2048, timeout=300)
+@app.function(image=image, cpu=4.0, memory=4096, timeout=300)
 @modal.asgi_app(label="kingme-engine-api")
 def fastapi_app():
     return create_app()

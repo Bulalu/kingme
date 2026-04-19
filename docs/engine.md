@@ -154,10 +154,18 @@ That is enough for:
 
 ## Recommendation For Product
 
-Use two serving classes initially:
+For the first public release, use one agent:
 
-- stable alpha-beta agents for reliability
-- one featured hybrid agent for the “our own model” story
+- `sinza`
 
-That gives the product a dependable fallback while the training repo keeps chasing stronger checkpoints.
+And point it at the strongest owned serving config, not the most experimental one.
 
+At the moment that means:
+
+- upgraded `alphabeta`
+- `depth 7`
+
+Reason:
+
+- benchmark evidence says the upgraded search engine is currently stronger than the older checkpoint-backed hybrid runtime we have on hand
+- the hybrid path stays in the lab until it clearly earns promotion

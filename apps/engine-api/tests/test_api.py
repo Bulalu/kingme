@@ -18,7 +18,7 @@ def test_agents_endpoint_lists_builtin_bots() -> None:
     response = client.get("/v1/agents")
     assert response.status_code == 200
     agent_ids = {agent["id"] for agent in response.json()}
-    assert {"rookie", "street"}.issubset(agent_ids)
+    assert agent_ids == {"sinza"}
 
 
 def test_apply_and_reply_flow_works_for_builtin_agent() -> None:
@@ -40,7 +40,7 @@ def test_apply_and_reply_flow_works_for_builtin_agent() -> None:
 
     agent_response = client.post(
         "/v1/agent-move",
-        json={"agent_id": "rookie", "state": after_human},
+        json={"agent_id": "sinza", "state": after_human},
     )
     assert agent_response.status_code == 200
     payload = agent_response.json()

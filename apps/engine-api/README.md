@@ -73,6 +73,19 @@ That means the first deployed version is ready to serve the built-in alpha-beta 
 
 If you want a released checkpoint-backed bot on Modal later, add the checkpoint as a release artifact first, then point an agent manifest at its container path.
 
+## Live Product Agent
+
+The intended public launch agent is:
+
+- `sinza`
+
+Right now `sinza` is mapped to the strongest owned engine config we can defend from benchmark evidence:
+
+- upgraded `alphabeta`
+- `depth: 7`
+
+This is deliberate. The older neural hybrid checkpoints are interesting, but they are not yet the strongest serving choice. Until a checkpoint-backed release clearly beats the upgraded search engine, `sinza` should stay on the stronger engine.
+
 ## Environment
 
 See [.env.example](/Users/elishabulalu/Desktop/kingme/apps/engine-api/.env.example).

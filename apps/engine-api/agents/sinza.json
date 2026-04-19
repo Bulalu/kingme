@@ -1,0 +1,9 @@
+{
+  "id": "sinza",
+  "display_name": "Sinza",
+  "description": "Current strongest owned release. Upgraded alpha-beta search running the April 19 strong-mode depth.",
+  "engine": "alphabeta",
+  "depth": 7,
+  "quiescence": true,
+  "public": true
+}
