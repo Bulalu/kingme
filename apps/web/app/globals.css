@@ -1332,6 +1332,15 @@ button { font: inherit; cursor: pointer; border: 0; background: transparent; col
   padding-top: 32px;
   border-top: 1px solid var(--line);
 }
+.km-footer-link {
+  color: var(--fg);
+  border-bottom: 1px solid var(--fg-muted);
+  transition: color 0.15s, border-color 0.15s;
+}
+.km-footer-link:hover {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
 
 /* ══ Tweaks panel ══ */
 .km-tweaks {

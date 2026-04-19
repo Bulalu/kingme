@@ -753,7 +753,18 @@ export function Footer() {
       </div>
       <div className="km-footer-bot">
         <div>© 2026 kingme labs · trained in a bedroom</div>
-        <div>built by bulalu · made to lose gracefully (you, not us)</div>
+        <div>
+          built by{" "}
+          <a
+            className="km-footer-link"
+            href="https://x.com/elisha_bulalu"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            bulalu
+          </a>{" "}
+          · made to lose gracefully (you, not us)
+        </div>
       </div>
     </footer>
   );
