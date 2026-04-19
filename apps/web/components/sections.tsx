@@ -196,7 +196,7 @@ export function Roster() {
     },
     {
       id: "manzese",
-      img: "/assets/goba.png",
+      img: "/assets/manzese.png",
       name: "MZE MANZESE",
       tagline: "the old man",
       game: "Checkers · grandmaster",
