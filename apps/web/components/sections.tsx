@@ -130,7 +130,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 demoSpeedMs={850}
               />
               <div className="km-board-footer">
-                <span>agent · sinza-v3 · 61M params</span>
+                <span>agent · sinza-v1 · 61M params</span>
                 <span>difficulty · hard</span>
               </div>
             </div>
@@ -195,7 +195,7 @@ export function Roster() {
       games: "41,287",
       winRate: "96.9%",
       params: "61M",
-      version: "v3",
+      version: "v1",
       bio: "Sinza plays fast and talks faster. He learned checkers the only way that matters — fourteen million games against himself — and now he wants yours. He drinks through the whole match. It does not help you.",
       quote: '"king me, then king me again. i can wait."',
       style: "aggressive · loves forced captures",
