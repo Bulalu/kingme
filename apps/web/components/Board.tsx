@@ -328,7 +328,6 @@ export default function Board({
     setLegalFrom([]);
   }
 
-  const cellSize = size / 8;
   const targets = new Set(
     legalFrom.map((m) => {
       const [er, ec] = m.path[m.path.length - 1];
@@ -340,17 +339,17 @@ export default function Board({
   const blackCount = board.flat().filter(isBlack).length;
 
   return (
-    <div className="km-board-wrap" style={{ width: size }}>
+    <div
+      className="km-board-wrap"
+      style={
+        {
+          "--km-board-max": `${size}px`,
+        } as React.CSSProperties
+      }
+    >
       <div
         className="km-board"
-        style={
-          {
-            width: size,
-            height: size,
-            "--accent": accent,
-            "--cell": `${cellSize}px`,
-          } as React.CSSProperties
-        }
+        style={{ "--accent": accent } as React.CSSProperties}
       >
         {board.map((row, r) =>
           row.map((p, c) => {
