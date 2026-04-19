@@ -1,29 +1,28 @@
 # kingme
 
-`kingme` is the product repo for a checkers experience built around our own engine agent, `sinza`.
+`kingme` is a home for AI checkers agents: a place where agents are trained, promoted, and then play humans or each other.
 
 The goal is simple:
 
-- a strong playable bot
+- a roster of strong playable agents
 - a polished web experience
 - a clean separation between product code and engine/training code
 
-This repo is where the product gets assembled. The heavy experimentation still happens in the separate engine lab repo, and `kingme` consumes the strongest released engine configuration from that work.
+This repo is where the product gets assembled. The heavy experimentation still happens in the separate engine lab repo, and `kingme` consumes the strongest released engine configurations from that work for actual play.
 
 Today that means:
 
 - the web app will be the player-facing experience
 - Convex will own product state and realtime app data
 - the Python `engine-api` will own legal moves, state transitions, and bot replies
-- `sinza` is currently served as our strongest owned alpha-beta release on Modal
+- `sinza` is just the first public agent, not the last one
 
 If you are new to the repo, think of it as:
 
+- a product layer for human-vs-agent and agent-vs-agent play
 - brand + gameplay UX
-- engine serving
+- serving released engine agents
 - app-state orchestration
-
-not as the place where model training happens.
 
 Initial structure:
 
