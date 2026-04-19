@@ -61,11 +61,10 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <p className="km-hero-sub">{t.sub}</p>
 
           <div className="km-hero-ctas">
-            <button
-              className="km-btn km-btn-primary"
-              onClick={() => setMode("play")}
-            >
-              {mode === "play" ? "↻ new game" : `▶ ${t.cta}`}
+            {/* Arena page isn't built yet — primary CTA is a visual placeholder.
+                When arena ships, route this to it instead of toggling mode. */}
+            <button className="km-btn km-btn-primary" type="button">
+              {`▶ ${t.cta}`}
             </button>
             <button
               className={
@@ -73,6 +72,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 (mode === "demo" ? "km-btn-active" : "")
               }
               onClick={() => setMode("demo")}
+              type="button"
             >
               {t.cta2}
             </button>
