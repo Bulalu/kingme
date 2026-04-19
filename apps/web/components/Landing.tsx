@@ -1,6 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
+import Link from "next/link";
 import {
   Hero,
   Marquee,
@@ -17,7 +18,7 @@ const DEFAULT_VARIANT = "noir";
 const DEFAULT_ACCENT = "#ff4b2b";
 const DEFAULT_VOICE = "cocky";
 
-function Nav({ onPlayClick }: { onPlayClick: () => void }) {
+function Nav() {
   return (
     <nav className="km-nav">
       <div className="km-wrap km-nav-inner">
@@ -31,9 +32,9 @@ function Nav({ onPlayClick }: { onPlayClick: () => void }) {
           <a>leaderboard</a>
           <a>for devs</a>
         </div>
-        <a className="km-nav-cta" onClick={onPlayClick}>
+        <Link className="km-nav-cta" href="/arena">
           king me →
-        </a>
+        </Link>
       </div>
     </nav>
   );
@@ -44,33 +45,22 @@ export default function Landing() {
   const [accent] = useState(DEFAULT_ACCENT);
   const [copyVoice] = useState(DEFAULT_VOICE);
   const [mode, setMode] = useState<"demo" | "play">("demo");
-  const heroRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     document.documentElement.setAttribute("data-variant", variant);
     document.documentElement.style.setProperty("--accent", accent);
   }, [variant, accent]);
 
-  // Arena page isn't built yet — nav CTA is a visual placeholder.
-  // For now it just scrolls back to the hero; wire to /arena when shipped.
-  const onPlayClick = () => {
-    if (heroRef.current) {
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
-  };
-
   return (
     <>
-      <Nav onPlayClick={onPlayClick} />
-      <div ref={heroRef}>
-        <Hero
-          variant={variant}
-          accent={accent}
-          copyVoice={copyVoice}
-          mode={mode}
-          setMode={setMode}
-        />
-      </div>
+      <Nav />
+      <Hero
+        variant={variant}
+        accent={accent}
+        copyVoice={copyVoice}
+        mode={mode}
+        setMode={setMode}
+      />
       <Marquee />
       <Roster />
       <Roadmap />
