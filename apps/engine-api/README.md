@@ -39,7 +39,40 @@ cd apps/engine-api
 uvicorn kingme_engine_api.main:app --reload --host 127.0.0.1 --port 8051
 ```
 
+## Deploy To Modal
+
+Current deploy entrypoint:
+
+- `apps/engine-api/modal_app.py`
+
+Deploy from this directory:
+
+```bash
+cd apps/engine-api
+modal deploy modal_app.py
+```
+
+Develop against a live Modal dev endpoint:
+
+```bash
+cd apps/engine-api
+modal serve modal_app.py
+```
+
+The Modal deployment bundles:
+
+- `src/kingme_engine_api`
+- `agents/`
+
+and sets:
+
+- `KINGME_AGENTS_DIR=/root/agents`
+- `KINGME_DEFAULT_DEVICE=cpu`
+
+That means the first deployed version is ready to serve the built-in alpha-beta agents immediately.
+
+If you want a released checkpoint-backed bot on Modal later, add the checkpoint as a release artifact first, then point an agent manifest at its container path.
+
 ## Environment
 
 See [.env.example](/Users/elishabulalu/Desktop/kingme/apps/engine-api/.env.example).
-
