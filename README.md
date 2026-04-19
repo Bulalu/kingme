@@ -1,27 +1,28 @@
 # kingme
 
-`kingme` is a home for AI checkers agents: a place where agents are trained, promoted, and then play humans or each other.
+`kingme` is a home for AI game agents: a place where agents are trained, promoted, and then play humans or each other across different games.
 
 The goal is simple:
 
-- a roster of strong playable agents
+- a roster of strong playable agents across multiple games
 - a polished web experience
 - a clean separation between product code and engine/training code
 
-This repo is where the product gets assembled. The heavy experimentation still happens in the separate engine lab repo, and `kingme` consumes the strongest released engine configurations from that work for actual play.
+This repo is where the product gets assembled. The heavy experimentation still happens in separate engine lab repos, and `kingme` consumes the strongest released engine configurations from that work for actual play.
 
 Today that means:
 
 - the web app will be the player-facing experience
 - Convex will own product state and realtime app data
 - the Python `engine-api` will own legal moves, state transitions, and bot replies
+- checkers is the first live game, not the only planned one
 - `sinza` is just the first public agent, not the last one
 
 If you are new to the repo, think of it as:
 
 - a product layer for human-vs-agent and agent-vs-agent play
 - brand + gameplay UX
-- serving released engine agents
+- serving released engine agents for individual games
 - app-state orchestration
 
 Initial structure:

@@ -9,13 +9,19 @@
 
 ## Why this split
 
-Your checkers engine already exists in Python and is CPU-heavy. That makes it a poor fit for direct execution inside a Next.js server route or inside Convex functions.
+Our first engine, checkers, already exists in Python and is CPU-heavy. That makes it a poor fit for direct execution inside a Next.js server route or inside Convex functions.
 
 The clean separation is:
 
 - Next.js for product UI and routes
 - Convex for product state and realtime sync
 - Python engine service for move generation, evaluation, and model/search orchestration
+
+That same split should still hold as more games are added:
+
+- product layer stays shared
+- game engines stay isolated behind service boundaries
+- each game can evolve at its own pace without forcing the whole app into one engine stack
 
 ## Monorepo Layout
 
@@ -49,13 +55,15 @@ Keep engine logic out of this app. It should render board state, submit player a
 
 Use this for:
 
-- wrapping the current Python checkers engine
+- wrapping the current Python game engines
 - loading checkpoints
 - exposing move-generation endpoints
 - exposing benchmark/eval endpoints for admin or internal tooling
 - future training-control endpoints if you need them
 
 This service should be stateless. Convex should own durable game/session state.
+
+Pragmatically, the first version is checkers-first. Future games can be added as separate engine modules or services behind the same product boundary.
 
 ### `convex`
 
@@ -74,7 +82,7 @@ Convex should orchestrate application state, not perform heavy search.
 
 Use this for shared frontend pieces like:
 
-- board renderer
+- board or game-surface renderer
 - move list
 - clocks
 - agent cards
@@ -157,5 +165,5 @@ That gives you:
 4. Connect `apps/web` to Convex session state.
 5. Add a single playable bot end-to-end.
 6. Add multiple agent configs/personas on top of the same engine service.
-7. Add benchmark/admin pages only after the play flow is stable.
-
+7. Generalize the product shell so additional games can plug into the same system.
+8. Add benchmark/admin pages only after the play flow is stable.

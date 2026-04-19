@@ -1,5 +1,9 @@
 # Engine
 
+This document describes the current serving engine runtime for the first live game: checkers.
+
+`kingme` itself is not intended to be checkers-only. As more games are added, each game can have its own serving runtime and API surface behind the same broader product.
+
 ## Purpose
 
 `kingme` does not own training. It owns serving.
