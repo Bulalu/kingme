@@ -2,6 +2,8 @@
 
 `kingme` is a home for AI game agents: a place where agents are trained, promoted, and then play humans or each other across different games.
 
+![Kingme roster concept](docs/assets/kingme-roster-concept.png)
+
 The goal is simple:
 
 - a roster of strong playable agents across multiple games
