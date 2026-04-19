@@ -1,26 +1,35 @@
 "use client";
 
-// Arena (play) view — clean 2D. Ported from the design package (arena.jsx),
-// minus the AgentSelect screen: this view always opens straight into a game
-// against sinza. When the live engine is wired up, swap pickAIMove for the
-// engine API call.
+// Arena (play) view — clean 2D, driven by the live engine API on Modal.
+// Per CLAUDE.md, the engine API owns legality and state transitions; this
+// component round-trips the full StatePayload exactly and only renders.
 
-import { useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import {
-  applyMove,
   isBlack,
   isKing,
   isRed,
-  legalMoves,
-  pickAIMove,
-  startBoard,
-  winner as winnerOf,
   type BoardState,
   type Coord,
-  type Move,
   type Side,
 } from "@/lib/checkers";
+import {
+  agentMove,
+  apiSideToUi,
+  apiWinnerToUi,
+  applyMoveApi,
+  coordToSquare,
+  findMoveByEndpoints,
+  getInitialState,
+  getLegalMoves,
+  rowsToBoard,
+  squareToCoord,
+  type ApplyMoveResponse,
+  type AgentMoveResponse,
+  type MovePayload,
+  type StatePayload,
+} from "@/lib/engine";
 
 interface Agent {
   id: string;
@@ -170,15 +179,16 @@ function PostGame({ status, agent, moves, onExit, onRematch }: PostGameProps) {
   // Intentional non-determinism for the falling-emoji effect. Computed once
   // per mount via a lazy useState initializer so re-renders don't reshuffle.
   const [laughs] = useState(() => {
-    if (!lost) return [] as Array<{
-      id: number;
-      left: number;
-      delay: number;
-      dur: number;
-      size: number;
-      sway: number;
-      rot: number;
-    }>;
+    if (!lost)
+      return [] as Array<{
+        id: number;
+        left: number;
+        delay: number;
+        dur: number;
+        size: number;
+        sway: number;
+        rot: number;
+      }>;
     return Array.from({ length: 28 }).map((_, i) => ({
       id: i,
       left: Math.random() * 100,
@@ -301,66 +311,127 @@ function ArenaGame({
   onExit: () => void;
   onRematch: () => void;
 }) {
-  const [board, setBoard] = useState<BoardState>(startBoard);
-  const [turn, setTurn] = useState<Side>("red");
+  // Engine-authoritative game state.
+  const [apiState, setApiState] = useState<StatePayload | null>(null);
+  const [legal, setLegal] = useState<MovePayload[]>([]);
+  const [status, setStatus] = useState<Side | "draw" | null>(null);
+  const [boot, setBoot] = useState<"loading" | "ready" | "error">("loading");
+  const [bootError, setBootError] = useState<string | null>(null);
+
+  // UI-only ephemeral state (not persisted, not engine-owned).
   const [selected, setSelected] = useState<Coord | null>(null);
-  const [legalFrom, setLegalFrom] = useState<Move[]>([]);
+  const [legalFrom, setLegalFrom] = useState<MovePayload[]>([]);
   const [lastMove, setLastMove] = useState<{ from: Coord; to: Coord } | null>(
     null,
   );
-  const [status, setStatus] = useState<Side | "draw" | null>(null);
   const [history, setHistory] = useState<MoveLog[]>([]);
   const [yourClock, setYourClock] = useState(300);
   const [theirClock, setTheirClock] = useState(300);
   const [combo, setCombo] = useState<ComboState | null>(null);
   const comboKey = useRef(0);
+  // Pending request guard: while a move is in-flight we suppress clicks
+  // and show "thinking" so the user can't double-submit.
+  const [pending, setPending] = useState(false);
 
-  // Derived: AI is "thinking" between human's move and its reply firing.
-  const thinking = turn === "black" && !status;
+  // Derived: who's to move (UI side), and whether the AI is currently working.
+  const turn: Side | null = apiState ? apiSideToUi(apiState.side_to_move) : null;
+  const board: BoardState = apiState
+    ? rowsToBoard(apiState.rows)
+    : Array.from({ length: 8 }, () => Array(8).fill(0) as BoardState[number]);
+  const thinking = !!apiState && !status && (turn === "black" || pending);
+
+  // Apply an ApplyMove or AgentMove response, advancing all derived state.
+  const applyResponse = useCallback(
+    (
+      next: ApplyMoveResponse | AgentMoveResponse,
+      moveSide: Side,
+      moveAgentName?: string,
+    ) => {
+      const { state, legal_moves, winner } = next;
+      const move = "applied_move" in next ? next.applied_move : next.move;
+      const fromCoord = squareToCoord(move.path[0]);
+      const toCoord = squareToCoord(move.path[move.path.length - 1]);
+
+      setApiState(state);
+      setLegal(legal_moves);
+      setLastMove({ from: fromCoord, to: toCoord });
+      setHistory((h) => [
+        ...h,
+        {
+          side: moveSide,
+          from: fromCoord,
+          to: toCoord,
+          captured: move.capture_count,
+          promoted: move.promotes,
+        },
+      ]);
+      if (move.capture_count >= 2) {
+        comboKey.current += 1;
+        setCombo({
+          count: move.capture_count,
+          side: moveSide,
+          key: comboKey.current,
+        });
+      }
+      const w = apiWinnerToUi(winner);
+      if (w) setStatus(w);
+
+      // Suppress unused-var warning in builds without the agent name in scope.
+      void moveAgentName;
+    },
+    [],
+  );
+
+  // Boot: fetch initial state, then if it's the AI's turn, ask sinza to open.
+  useEffect(() => {
+    const ctrl = new AbortController();
+    let cancelled = false;
+    (async () => {
+      try {
+        const initial = await getInitialState(ctrl.signal);
+        if (cancelled) return;
+        const initialUiTurn = apiSideToUi(initial.side_to_move);
+        // Always fetch legal moves so highlights work no matter whose turn.
+        const lm = await getLegalMoves(initial);
+        if (cancelled) return;
+        setApiState(lm.state);
+        setLegal(lm.legal_moves);
+        setBoot("ready");
+
+        // If sinza opens (API initial state has side_to_move === "red" today),
+        // trigger the agent move right away.
+        if (initialUiTurn === "black") {
+          setPending(true);
+          try {
+            const agentResp = await agentMove(agent.id, lm.state);
+            if (cancelled) return;
+            applyResponse(agentResp, "black");
+          } finally {
+            if (!cancelled) setPending(false);
+          }
+        }
+      } catch (e) {
+        if (cancelled) return;
+        const msg = e instanceof Error ? e.message : String(e);
+        setBootError(msg);
+        setBoot("error");
+      }
+    })();
+    return () => {
+      cancelled = true;
+      ctrl.abort();
+    };
+  }, [agent.id, applyResponse]);
 
   // clocks
   useEffect(() => {
-    if (status) return;
+    if (status || !turn) return;
     const id = setInterval(() => {
       if (turn === "red") setYourClock((s) => Math.max(0, s - 1));
       else setTheirClock((s) => Math.max(0, s - 1));
     }, 1000);
     return () => clearInterval(id);
   }, [turn, status]);
-
-  // AI turn
-  useEffect(() => {
-    if (status || turn !== "black") return;
-    const delay = 700 + Math.random() * 900;
-    const t = setTimeout(() => {
-      const mv = pickAIMove(board, "black", "normal");
-      if (!mv) {
-        setStatus("red");
-        return;
-      }
-      const nb = applyMove(board, mv);
-      const to = mv.path[mv.path.length - 1];
-      setBoard(nb);
-      setLastMove({ from: mv.from, to });
-      setHistory((h) => [
-        ...h,
-        {
-          side: "black",
-          from: mv.from,
-          to,
-          captured: mv.captured.length,
-          promoted: mv.promoted,
-        },
-      ]);
-      if (mv.captured.length >= 2) {
-        setCombo({ count: mv.captured.length, side: "black", key: ++comboKey.current });
-      }
-      const w = winnerOf(nb);
-      if (w) setStatus(w);
-      else setTurn("red");
-    }, delay);
-    return () => clearTimeout(t);
-  }, [board, turn, status]);
 
   // auto-clear combo banner
   useEffect(() => {
@@ -369,60 +440,74 @@ function ArenaGame({
     return () => clearTimeout(t);
   }, [combo]);
 
-  function onCell(r: number, c: number) {
-    if (status || turn !== "red") return;
-    const all = legalMoves(board, "red");
-    const piece = board[r][c];
-    if (piece && (piece === 1 || piece === 2)) {
-      const mine = all.filter((m) => m.from[0] === r && m.from[1] === c);
-      if (mine.length) {
-        setSelected([r, c]);
-        setLegalFrom(mine);
-        return;
-      }
-    }
-    if (selected) {
-      const mv = legalFrom.find((m) => {
-        const [er, ec] = m.path[m.path.length - 1];
-        return er === r && ec === c;
-      });
-      if (mv) {
-        const nb = applyMove(board, mv);
-        const to = mv.path[mv.path.length - 1];
-        setBoard(nb);
-        setLastMove({ from: mv.from, to });
-        setHistory((h) => [
-          ...h,
-          {
-            side: "red",
-            from: mv.from,
-            to,
-            captured: mv.captured.length,
-            promoted: mv.promoted,
-          },
-        ]);
-        if (mv.captured.length >= 2) {
-          setCombo({
-            count: mv.captured.length,
-            side: "red",
-            key: ++comboKey.current,
-          });
+  // Human click handler.
+  const onCell = useCallback(
+    async (r: number, c: number) => {
+      if (status || pending || boot !== "ready") return;
+      if (!apiState || turn !== "red") return;
+
+      const piece = board[r][c];
+
+      // Click on own piece → select it and show its legal targets.
+      if (piece && (piece === 1 || piece === 2)) {
+        const fromSq = coordToSquare(r, c);
+        const mine = legal.filter((m) => m.path[0] === fromSq);
+        if (mine.length) {
+          setSelected([r, c]);
+          setLegalFrom(mine);
+          return;
         }
-        setSelected(null);
-        setLegalFrom([]);
-        const w = winnerOf(nb);
-        if (w) setStatus(w);
-        else setTurn("black");
-        return;
       }
-    }
-    setSelected(null);
-    setLegalFrom([]);
-  }
+
+      // Click on a target → submit the move.
+      if (selected) {
+        const mv = findMoveByEndpoints(legalFrom, selected, [r, c]);
+        if (mv) {
+          setSelected(null);
+          setLegalFrom([]);
+          setPending(true);
+          try {
+            const applied = await applyMoveApi(apiState, mv.pdn);
+            applyResponse(applied, "red");
+
+            // If game continues and it's now sinza's turn, ask for the reply.
+            if (!applied.winner) {
+              const agentResp = await agentMove(agent.id, applied.state);
+              applyResponse(agentResp, "black");
+            }
+          } catch (e) {
+            // Revert highlight; surface error in the status panel.
+            const msg = e instanceof Error ? e.message : String(e);
+            setBootError(msg);
+            setBoot("error");
+          } finally {
+            setPending(false);
+          }
+          return;
+        }
+      }
+
+      setSelected(null);
+      setLegalFrom([]);
+    },
+    [
+      agent.id,
+      apiState,
+      applyResponse,
+      board,
+      boot,
+      legal,
+      legalFrom,
+      pending,
+      selected,
+      status,
+      turn,
+    ],
+  );
 
   const targets = new Set(
     legalFrom.map((m) => {
-      const [er, ec] = m.path[m.path.length - 1];
+      const [er, ec] = squareToCoord(m.path[m.path.length - 1]);
       return `${er},${ec}`;
     }),
   );
@@ -598,7 +683,7 @@ function ArenaGame({
             name="YOU"
             tagline="the challenger"
             captured={theirCaptured}
-            active={turn === "red" && !status}
+            active={turn === "red" && !status && !pending}
             time={fmtClock(yourClock)}
             side="red"
           />
@@ -609,7 +694,11 @@ function ArenaGame({
           <div className="ar-stat">
             <div className="ar-stat-label">status</div>
             <div className="ar-stat-val">
-              {status ? (
+              {boot === "loading" ? (
+                <span className="ar-blink">connecting…</span>
+              ) : boot === "error" ? (
+                <span title={bootError ?? ""}>engine offline</span>
+              ) : status ? (
                 status === "black" ? (
                   "you lost"
                 ) : status === "red" ? (
@@ -633,7 +722,7 @@ function ArenaGame({
               <div
                 className="ar-eval-fill"
                 style={{
-                  height: `${(redCount / (redCount + blackCount)) * 100}%`,
+                  height: `${(redCount / Math.max(1, redCount + blackCount)) * 100}%`,
                 }}
               />
             </div>

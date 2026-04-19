@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 
 from .registry import AgentRegistry
 from .schemas import (
@@ -24,6 +25,22 @@ def create_app() -> FastAPI:
     service = EngineService(registry)
 
     app = FastAPI(title=settings.app_name)
+
+    # Browser clients (apps/web on kingme.dev and local dev) talk to this
+    # API directly. Allow the production origin and common local dev hosts.
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=[
+            "https://kingme.dev",
+            "https://www.kingme.dev",
+            "http://localhost:3000",
+            "http://127.0.0.1:3000",
+        ],
+        allow_origin_regex=r"^https://[a-z0-9-]+-ctrlx\.vercel\.app$",
+        allow_methods=["GET", "POST", "OPTIONS"],
+        allow_headers=["content-type"],
+        max_age=600,
+    )
 
     @app.get("/health", response_model=HealthPayload)
     def health() -> HealthPayload:
