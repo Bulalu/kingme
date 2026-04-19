@@ -1,0 +1,14 @@
+{
+  "id": "sinza",
+  "display_name": "Sinza",
+  "description": "Experimental neural hybrid release using the current best local checkpoint.",
+  "engine": "bootstrap_hybrid",
+  "depth": 4,
+  "checkpoint_path": "${KINGME_SINZA_CHECKPOINT}",
+  "device": "${KINGME_DEFAULT_DEVICE}",
+  "value_scale": 100.0,
+  "heuristic_blend": 1.0,
+  "quiescence": true,
+  "public": false
+}
+
