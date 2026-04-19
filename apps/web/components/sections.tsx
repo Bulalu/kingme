@@ -195,7 +195,7 @@ export function Roster() {
       winRate: "96.9%",
       params: "61M",
       version: "v1",
-      bio: "Sinza plays fast and talks faster. He learned checkers the only way that matters — fourteen million games against himself — and now he wants yours. He drinks through the whole match. It does not help you.",
+      bio: "Sinza is here for the audience, not the game. He'll let you king him just to make the comeback uglier. He's never lost a rematch. He's never offered one either.",
       quote: '"king me, then king me again. i can wait."',
       style: "aggressive · loves forced captures",
     },
