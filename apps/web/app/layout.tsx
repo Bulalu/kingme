@@ -1,5 +1,40 @@
 import type { Metadata } from "next";
+import {
+  Anton,
+  Inter,
+  JetBrains_Mono,
+  Playfair_Display,
+} from "next/font/google";
 import "./globals.css";
+
+const inter = Inter({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-inter",
+  display: "swap",
+});
+
+const playfair = Playfair_Display({
+  subsets: ["latin"],
+  weight: ["400", "600"],
+  style: ["normal", "italic"],
+  variable: "--font-playfair",
+  display: "swap",
+});
+
+const anton = Anton({
+  subsets: ["latin"],
+  weight: "400",
+  variable: "--font-anton",
+  display: "swap",
+});
+
+const jetbrains = JetBrains_Mono({
+  subsets: ["latin"],
+  weight: ["400", "500", "600"],
+  variable: "--font-jetbrains",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "kingme.dev — king me.",
@@ -13,19 +48,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en" data-variant="noir">
-      <head>
-        <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link
-          rel="preconnect"
-          href="https://fonts.gstatic.com"
-          crossOrigin="anonymous"
-        />
-        <link
-          href="https://fonts.googleapis.com/css2?family=Anton&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&family=Playfair+Display:ital,wght@0,400;0,600;1,400;1,600&display=swap"
-          rel="stylesheet"
-        />
-      </head>
+    <html
+      lang="en"
+      data-variant="noir"
+      className={`${inter.variable} ${playfair.variable} ${anton.variable} ${jetbrains.variable}`}
+    >
       <body>{children}</body>
     </html>
   );
