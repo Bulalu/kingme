@@ -3,7 +3,7 @@
 // Landing page sections for kingme.dev
 // Ported from the design package (sections.jsx).
 
-import { useState, type ReactNode } from "react";
+import { useMemo, useState, type ReactNode } from "react";
 import Board from "./Board";
 
 // ── Hero ───────────────────────────────────────────────────────
@@ -122,7 +122,13 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                   {mode === "play" ? "● LIVE" : "● DEMO"}
                 </span>
               </div>
-              <Board mode={mode} size={460} accent={accent} demoSpeedMs={850} />
+              <Board
+                key={mode}
+                mode={mode}
+                size={460}
+                accent={accent}
+                demoSpeedMs={850}
+              />
               <div className="km-board-footer">
                 <span>agent · sinza-v3 · 61M params</span>
                 <span>difficulty · hard</span>
@@ -505,32 +511,34 @@ export function WinsGallery() {
   );
 }
 
-// deterministic pseudo-board for the wins gallery thumbnails
-function MiniBoard({ seed = 0 }: { seed?: number }) {
+function buildMiniBoard(seed: number): number[][] {
   let s = seed;
-  const rnd = () => {
-    s = (s * 9301 + 49297) % 233280;
-    return s / 233280;
-  };
-  const b: number[][] = Array.from({ length: 8 }, () => Array(8).fill(0));
+  const board: number[][] = Array.from({ length: 8 }, () => Array(8).fill(0));
   let reds = 0,
     blacks = 0;
   for (let r = 0; r < 8; r++) {
     for (let c = 0; c < 8; c++) {
       if ((r + c) % 2 === 0) continue;
-      const v = rnd();
+      s = (s * 9301 + 49297) % 233280;
+      const v = s / 233280;
       if (r < 3 && v < 0.55 && blacks < 9) {
-        b[r][c] = 3;
+        board[r][c] = 3;
         blacks++;
       } else if (r > 4 && v < 0.35 && reds < 5) {
-        b[r][c] = 1;
+        board[r][c] = 1;
         reds++;
       } else if (r >= 3 && r <= 4 && v < 0.2) {
-        b[r][c] = v < 0.1 ? 4 : 3;
+        board[r][c] = v < 0.1 ? 4 : 3;
         blacks++;
       }
     }
   }
+  return board;
+}
+
+// deterministic pseudo-board for the wins gallery thumbnails
+function MiniBoard({ seed = 0 }: { seed?: number }) {
+  const b = useMemo(() => buildMiniBoard(seed), [seed]);
   return (
     <div className="km-mini-board">
       {b.map((row, r) =>
