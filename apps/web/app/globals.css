@@ -1423,7 +1423,9 @@ button { font: inherit; cursor: pointer; border: 0; background: transparent; col
   .km-gallery-grid,
   .km-how-grid { grid-template-columns: 1fr; }
   .km-footer-mid { grid-template-columns: 1fr; }
-  .km-hero-meta { grid-template-columns: 1fr; gap: 20px; }
+  .km-hero-meta { gap: 12px; }
+  .km-stat-val { font-size: 30px; }
+  .km-stat-lbl { font-size: 9px; letter-spacing: 0.08em; }
   .km-wrap,
   .km-hero,
   .km-section,
