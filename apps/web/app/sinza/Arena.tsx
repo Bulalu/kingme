@@ -189,7 +189,7 @@ interface PostGameProps {
   status: Side | "draw";
   agent: Agent;
   moves: number;
-  onExit: () => void;
+  onExit: (moves: number) => void;
   onRematch: () => void;
 }
 
@@ -279,7 +279,7 @@ function PostGame({ status, agent, moves, onExit, onRematch }: PostGameProps) {
           <button className="ar-btn ar-btn-ghost" onClick={onRematch}>
             rematch
           </button>
-          <button className="ar-btn ar-btn-ghost" onClick={onExit}>
+          <button className="ar-btn ar-btn-ghost" onClick={() => onExit(moves)}>
             leave
           </button>
         </div>
@@ -375,7 +375,22 @@ export default function Arena({
       });
   }, [player, gameId, gameKey, startGame, agent.id, agent.name]);
 
-  const onExit = () => router.push("/");
+  // Exit from ArenaGame. If there's an in-progress game, forfeit it as an
+  // agent win before navigating. If the game was already completed by
+  // handleGameEnd, the server's idempotency guard makes this a no-op.
+  const onExit = useCallback(
+    (movesPlayed: number) => {
+      if (gameId) {
+        completeGame({ gameId, winner: "agent", moves: movesPlayed }).catch(
+          () => {
+            // Idempotent on the server — swallow and navigate.
+          },
+        );
+      }
+      router.push("/");
+    },
+    [gameId, completeGame, router],
+  );
   const onRematch = () => {
     setGameId(null);
     setGameKey((k) => k + 1);
@@ -433,7 +448,7 @@ function ArenaGame({
   agent: Agent;
   boardStyle: string;
   bs: BoardStyle;
-  onExit: () => void;
+  onExit: (moves: number) => void;
   onRematch: () => void;
   onGameEnd: (status: Side | "draw", moves: number) => void;
 }) {
@@ -733,7 +748,7 @@ function ArenaGame({
     >
       {/* top bar */}
       <div className="ar-bar">
-        <button className="ar-bar-exit" onClick={onExit}>
+        <button className="ar-bar-exit" onClick={() => onExit(history.length)}>
           ← leave
         </button>
         <div className="ar-bar-venue">
