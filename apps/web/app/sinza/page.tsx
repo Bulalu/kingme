@@ -1,11 +1,11 @@
 import type { Metadata } from "next";
 import Arena from "./Arena";
-import "./arena.css";
+import "./sinza.css";
 
 export const metadata: Metadata = {
-  title: "kingme · arena",
+  title: "kingme · sinza kijiweni",
 };
 
-export default function ArenaPage() {
+export default function SinzaPage() {
   return <Arena agentId="sinza" boardStyle="emerald" />;
 }

@@ -1,5 +1,5 @@
 // Minimal legal-move engine — standard American checkers, 8x8, mandatory captures.
-// Used by the in-hero demo board AND the /arena play view.
+// Used by the in-hero demo board AND the /sinza play view.
 //
 // IMPORTANT: this is a self-contained landing-page bot, NOT the live `sinza`
 // engine. The real engine lives at apps/engine-api and will eventually back

@@ -32,7 +32,7 @@ function Nav() {
           <a>leaderboard</a>
           <a>for devs</a>
         </div>
-        <Link className="km-nav-cta" href="/arena">
+        <Link className="km-nav-cta" href="/sinza">
           king me →
         </Link>
       </div>

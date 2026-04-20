@@ -86,7 +86,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <p className="km-hero-sub">{t.sub}</p>
 
           <div className="km-hero-ctas">
-            <Link className="km-btn km-btn-primary" href="/arena">
+            <Link className="km-btn km-btn-primary" href="/sinza">
               {`▶ ${t.cta}`}
             </Link>
             <button
@@ -279,7 +279,7 @@ export function Roster() {
                 {a.status === "live" ? (
                   <Link
                     className="km-btn km-btn-primary km-btn-sm"
-                    href="/arena"
+                    href="/sinza"
                   >
                     play {a.name.toLowerCase()} →
                   </Link>
