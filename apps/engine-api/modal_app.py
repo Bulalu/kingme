@@ -28,10 +28,19 @@ image = (
     # Keep one container running at all times so requests don't need to boot
     # the service from zero.
     min_containers=1,
+    # Cap fan-out so unexpected load can't run up the bill. Bump if we
+    # actually start hitting this ceiling.
+    max_containers=5,
     # Let any extra containers from short bursts stay hot for longer before
     # Modal scales them back down.
     scaledown_window=20 * 60,
 )
+# Alpha-beta search is CPU-bound and single-threaded under the GIL, so a
+# single container can really only chew on one move at a time. Cap each
+# container at 1 concurrent request — Modal will spin up additional
+# containers (up to max_containers) when multiple players move at once,
+# instead of queueing them all on one box.
+@modal.concurrent(max_inputs=1)
 @modal.asgi_app(label="kingme-engine-api")
 def fastapi_app():
     # Imported inside the function so the Modal CLI can discover this app
