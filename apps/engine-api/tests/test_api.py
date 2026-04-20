@@ -3,6 +3,7 @@ from __future__ import annotations
 from fastapi.testclient import TestClient
 
 from kingme_engine_api.api import create_app
+from kingme_engine_api.runtime.checkers_v2.action_encoding import coords_to_square
 
 
 client = TestClient(create_app())
@@ -67,3 +68,32 @@ def test_play_turn_combines_human_move_and_agent_reply() -> None:
     assert payload["agent"]["id"] == "sinza"
     assert payload["agent_move"]["pdn"]
     assert payload["search"]["depth"] >= 0
+
+
+def test_legal_moves_accept_pending_captures_for_forced_flying_king_sequence() -> None:
+    response = client.post(
+        "/v1/state/legal-moves",
+        json={
+            "state": {
+                "rows": [
+                    "........",
+                    "....R...",
+                    ".....w..",
+                    "........",
+                    ".w......",
+                    "........",
+                    "........",
+                    "........",
+                ],
+                "side_to_move": "red",
+                "forced_square": coords_to_square(1, 4),
+                "pending_captures": [coords_to_square(4, 1)],
+                "no_progress_count": 0,
+                "repetition_counts": [],
+            }
+        },
+    )
+
+    assert response.status_code == 200
+    payload = response.json()
+    assert {move["pdn"] for move in payload["legal_moves"]} == {"7x16", "7x20"}

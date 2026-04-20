@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from kingme_engine_api.runtime.checkers_v2.action_encoding import coords_to_square
-from kingme_engine_api.runtime.checkers_v2.runtime import RED, CheckersState
+from kingme_engine_api.runtime.checkers_v2.runtime import RED, WHITE_MAN, CheckersState
 from kingme_engine_api.runtime.engine import apply_macro_move, legal_macro_moves
 
 
@@ -86,4 +86,39 @@ def test_applying_flying_king_capture_removes_the_jumped_piece() -> None:
 
     assert state.board[coords_to_square(0, 5)] > 0
     assert state.board[coords_to_square(2, 3)] == 0
+    assert state.side_to_move == -RED
+
+
+def test_flying_king_multicapture_keeps_jumped_piece_until_turn_end() -> None:
+    state = CheckersState.from_rows(
+        (
+            "........",
+            "........",
+            ".....w..",
+            "........",
+            ".w......",
+            "R.......",
+            "........",
+            "........",
+        ),
+        side_to_move=RED,
+    )
+
+    move = next(item for item in legal_macro_moves(state) if item.path == (20, 6, 15))
+    first_action, second_action = move.actions
+    first_captured_square = coords_to_square(4, 1)
+    second_captured_square = coords_to_square(2, 5)
+
+    state.apply(first_action)
+
+    assert state.forced_square == coords_to_square(1, 4)
+    assert state.pending_captures == {first_captured_square}
+    assert state.board[first_captured_square] == WHITE_MAN
+
+    state.apply(second_action)
+
+    assert state.pending_captures == frozenset()
+    assert state.forced_square is None
+    assert state.board[first_captured_square] == 0
+    assert state.board[second_captured_square] == 0
     assert state.side_to_move == -RED

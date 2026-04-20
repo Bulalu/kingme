@@ -47,6 +47,7 @@ The live engine currently serves the Tanzanian-style 8x8 variant used by the pro
 - captures are mandatory
 - kings are flying kings and can travel multiple empty diagonal squares
 - kings can capture from distance and may land on any empty square beyond the captured piece
+- during a multi-capture sequence, captured pieces stay on the board until the sequence is finished
 
 Frontend code should treat all legality and landing-square generation as engine-owned behavior.
 
@@ -70,6 +71,7 @@ Represents the full playable game state.
   ],
   "side_to_move": "red",
   "forced_square": null,
+  "pending_captures": [],
   "no_progress_count": 0,
   "repetition_counts": [
     {
@@ -90,6 +92,9 @@ Fields:
   - `"red"` or `"white"`
 - `forced_square`
   - `null` unless the current player is in the middle of a forced multi-jump sequence
+- `pending_captures`
+  - playable-square indexes for pieces already jumped in the current capture sequence
+  - these pieces stay on the board visually/internally until the sequence completes
 - `no_progress_count`
   - move counter used in draw logic
 - `repetition_counts`

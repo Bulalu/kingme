@@ -80,6 +80,7 @@ The serving engine now follows the local Tanzanian-style 8x8 draughts variant:
 - captures are mandatory
 - kings are flying kings and can move diagonally across any number of empty squares
 - kings can capture from distance and land on any empty square beyond the captured piece
+- during a multi-capture sequence, jumped pieces remain on the board until the sequence ends
 
 This rules logic lives in:
 

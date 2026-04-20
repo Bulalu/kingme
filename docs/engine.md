@@ -29,6 +29,7 @@ That means:
 - kings are flying kings
 - kings can move diagonally across multiple empty squares
 - kings can capture from distance and choose any empty landing square beyond the captured piece
+- during a multi-capture sequence, jumped pieces remain on the board until the full sequence ends
 
 The code for that lives in:
 

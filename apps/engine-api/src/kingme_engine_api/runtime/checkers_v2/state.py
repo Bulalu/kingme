@@ -124,6 +124,7 @@ class CheckersState:
         board: Sequence[int] | None = None,
         side_to_move: int = RED,
         forced_square: int | None = None,
+        pending_captures: Sequence[int] | None = None,
         no_progress_count: int = 0,
         repetition_counts: dict[tuple[tuple[int, ...], int], int] | None = None,
     ):
@@ -134,6 +135,7 @@ class CheckersState:
             raise ValueError("side_to_move must be RED or WHITE")
         self.side_to_move = side_to_move
         self.forced_square = forced_square
+        self.pending_captures = frozenset(pending_captures or ())
         self.no_progress_count = no_progress_count
         self.repetition_counts = dict(repetition_counts or {})
         self._winner: int | None = None
@@ -150,6 +152,7 @@ class CheckersState:
         rows: Sequence[str],
         side_to_move: int = RED,
         forced_square: int | None = None,
+        pending_captures: Sequence[int] | None = None,
         no_progress_count: int = 0,
         repetition_counts: dict[tuple[tuple[int, ...], int], int] | None = None,
     ) -> "CheckersState":
@@ -171,6 +174,7 @@ class CheckersState:
             board=board,
             side_to_move=side_to_move,
             forced_square=forced_square,
+            pending_captures=pending_captures,
             no_progress_count=no_progress_count,
             repetition_counts=repetition_counts,
         )
@@ -180,6 +184,7 @@ class CheckersState:
             board=self.board,
             side_to_move=self.side_to_move,
             forced_square=self.forced_square,
+            pending_captures=self.pending_captures,
             no_progress_count=self.no_progress_count,
             repetition_counts=self.repetition_counts,
         )
@@ -334,6 +339,8 @@ class CheckersState:
             middle_piece = self.board[middle_square]
             if self.board[destination_square] != EMPTY:
                 return None
+            if middle_square in self.pending_captures:
+                return None
             if middle_piece == EMPTY or _piece_owner(middle_piece) == self.side_to_move:
                 return None
             return encode_action(source_square, destination_square, True)
@@ -347,6 +354,7 @@ class CheckersState:
         self.board[source_square] = EMPTY
         promoted = self._should_promote(piece, destination_square)
         self.board[destination_square] = self._promoted_piece(piece) if promoted else piece
+        self.pending_captures = frozenset()
         self.forced_square = None
         self.no_progress_count = 0 if promoted else self.no_progress_count + 1
         mover = self.side_to_move
@@ -358,24 +366,18 @@ class CheckersState:
         if captured_square is None:
             raise ValueError("capture move is missing a captured piece")
         self.board[source_square] = EMPTY
-        self.board[captured_square] = EMPTY
+        self.pending_captures = frozenset((*self.pending_captures, captured_square))
         promoted = self._should_promote(piece, destination_square)
         next_piece = self._promoted_piece(piece) if promoted else piece
         self.board[destination_square] = next_piece
         self.no_progress_count = 0
         if promoted:
-            self.forced_square = None
-            mover = self.side_to_move
-            self.side_to_move = -self.side_to_move
-            self._finalize_turn(mover)
+            self._finish_capture_turn()
             return
         if self._capture_actions_for_piece(destination_square, next_piece):
             self.forced_square = destination_square
             return
-        self.forced_square = None
-        mover = self.side_to_move
-        self.side_to_move = -self.side_to_move
-        self._finalize_turn(mover)
+        self._finish_capture_turn()
 
     def _capture_actions_for_piece(self, square: int, piece: int) -> list[int]:
         if _is_king(piece):
@@ -406,6 +408,8 @@ class CheckersState:
             seen_enemy: int | None = None
             for target_square in _ray_squares(square, delta_row, delta_col):
                 target_piece = self.board[target_square]
+                if target_square in self.pending_captures:
+                    break
                 if target_piece == EMPTY:
                     if seen_enemy is not None:
                         actions.append(encode_action(square, target_square, True))
@@ -434,6 +438,8 @@ class CheckersState:
             square = coords_to_square(row, col)
             occupant = self.board[square]
             if occupant != EMPTY:
+                if square in self.pending_captures:
+                    return None
                 if _piece_owner(occupant) == _piece_owner(piece):
                     return None
                 if captured_square is not None:
@@ -442,6 +448,15 @@ class CheckersState:
             row += step_row
             col += step_col
         return captured_square
+
+    def _finish_capture_turn(self) -> None:
+        for square in self.pending_captures:
+            self.board[square] = EMPTY
+        self.pending_captures = frozenset()
+        self.forced_square = None
+        mover = self.side_to_move
+        self.side_to_move = -self.side_to_move
+        self._finalize_turn(mover)
 
     def _finalize_turn(self, mover: int) -> None:
         if not self._player_has_pieces(self.side_to_move) or not self._generate_legal_actions():
