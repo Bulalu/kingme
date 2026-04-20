@@ -113,7 +113,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <div className="km-hero-opponent">
             <div className="km-opp-portrait">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/sinza.png" alt="Sinza" />
+              <img src="/assets/sinza.webp" alt="Sinza" />
               <div className="km-opp-badge">● LIVE</div>
             </div>
             <div className="km-opp-meta">
@@ -210,7 +210,7 @@ export function Roster() {
   const agents = [
     {
       id: "sinza",
-      img: "/assets/sinza.png",
+      img: "/assets/sinza.webp",
       name: "SINZA",
       tagline: "the showman",
       game: "Checkers",
@@ -226,7 +226,7 @@ export function Roster() {
     },
     {
       id: "manzese",
-      img: "/assets/manzese.png",
+      img: "/assets/manzese.webp",
       name: "MZE MANZESE",
       tagline: "the old man",
       game: "Checkers · grandmaster",
