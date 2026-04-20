@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
+import { rateLimiter } from "./rateLimits";
 
 // A game that hasn't seen a `complete` call within this window is treated
 // as abandoned — auto-forfeited to the agent by the cron. 30 minutes is
@@ -19,6 +20,7 @@ export const start = mutation({
     agentDisplayName: v.string(),
   },
   handler: async (ctx, { anonId, agentId, agentDisplayName }) => {
+    await rateLimiter.limit(ctx, "startGame", { key: anonId, throws: true });
     const player = await ctx.db
       .query("players")
       .withIndex("by_anonId", (q) => q.eq("anonId", anonId))
@@ -87,6 +89,7 @@ export const complete = mutation({
     moves: v.number(),
   },
   handler: async (ctx, { gameId, anonId, winner, moves }) => {
+    await rateLimiter.limit(ctx, "completeGame", { key: anonId, throws: true });
     const game = await ctx.db.get(gameId);
     if (!game) {
       throw new Error(`game ${gameId} not found`);

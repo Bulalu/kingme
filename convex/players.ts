@@ -1,5 +1,6 @@
 import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
+import { rateLimiter } from "./rateLimits";
 
 // One-shot upsert keyed on the browser's anonId. Used on every /sinza boot
 // so we always end up with a stable players row before a game begins.
@@ -9,6 +10,7 @@ export const upsert = mutation({
     name: v.optional(v.string()),
   },
   handler: async (ctx, { anonId, name }) => {
+    await rateLimiter.limit(ctx, "upsertPlayer", { key: anonId, throws: true });
     const existing = await ctx.db
       .query("players")
       .withIndex("by_anonId", (q) => q.eq("anonId", anonId))
@@ -41,6 +43,7 @@ export const upsert = mutation({
 export const setName = mutation({
   args: { anonId: v.string(), name: v.string() },
   handler: async (ctx, { anonId, name }) => {
+    await rateLimiter.limit(ctx, "setName", { key: anonId, throws: true });
     const player = await ctx.db
       .query("players")
       .withIndex("by_anonId", (q) => q.eq("anonId", anonId))

@@ -12,6 +12,7 @@ import type * as agents from "../agents.js";
 import type * as crons from "../crons.js";
 import type * as games from "../games.js";
 import type * as players from "../players.js";
+import type * as rateLimits from "../rateLimits.js";
 
 import type {
   ApiFromModules,
@@ -24,6 +25,7 @@ declare const fullApi: ApiFromModules<{
   crons: typeof crons;
   games: typeof games;
   players: typeof players;
+  rateLimits: typeof rateLimits;
 }>;
 
 /**
@@ -52,4 +54,6 @@ export declare const internal: FilterApi<
   FunctionReference<any, "internal">
 >;
 
-export declare const components: {};
+export declare const components: {
+  rateLimiter: import("@convex-dev/rate-limiter/_generated/component.js").ComponentApi<"rateLimiter">;
+};
