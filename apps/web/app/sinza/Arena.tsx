@@ -189,7 +189,7 @@ interface PostGameProps {
   status: Side | "draw";
   agent: Agent;
   moves: number;
-  onExit: (moves: number) => void;
+  onExit: () => void;
   onRematch: () => void;
 }
 
@@ -279,7 +279,7 @@ function PostGame({ status, agent, moves, onExit, onRematch }: PostGameProps) {
           <button className="ar-btn ar-btn-ghost" onClick={onRematch}>
             rematch
           </button>
-          <button className="ar-btn ar-btn-ghost" onClick={() => onExit(moves)}>
+          <button className="ar-btn ar-btn-ghost" onClick={onExit}>
             leave
           </button>
         </div>
@@ -375,10 +375,18 @@ export default function Arena({
       });
   }, [player, gameId, gameKey, startGame, agent.id, agent.name]);
 
-  // Exit from ArenaGame. If there's an in-progress game, forfeit it as an
-  // agent win before navigating. If the game was already completed by
-  // handleGameEnd, the server's idempotency guard makes this a no-op.
-  const onExit = useCallback(
+  // Plain navigation — no forfeit. Used when the game is already in a
+  // terminal state (PostGame screen) where handleGameEnd has written or
+  // is about to write the real winner. If we forfeited here too, an
+  // in-flight human-win or draw could be overtaken by the agent-win and
+  // the idempotency guard would preserve the wrong result.
+  const onExit = useCallback(() => {
+    router.push("/");
+  }, [router]);
+
+  // Mid-game exit from the top bar. Mark the game as an agent forfeit
+  // before navigating.
+  const onForfeitAndExit = useCallback(
     (movesPlayed: number) => {
       if (gameId) {
         completeGame({ gameId, winner: "agent", moves: movesPlayed }).catch(
@@ -430,6 +438,7 @@ export default function Arena({
         boardStyle={boardStyle}
         bs={bs}
         onExit={onExit}
+        onForfeitAndExit={onForfeitAndExit}
         onRematch={onRematch}
         onGameEnd={handleGameEnd}
       />
@@ -442,13 +451,15 @@ function ArenaGame({
   boardStyle,
   bs,
   onExit,
+  onForfeitAndExit,
   onRematch,
   onGameEnd,
 }: {
   agent: Agent;
   boardStyle: string;
   bs: BoardStyle;
-  onExit: (moves: number) => void;
+  onExit: () => void;
+  onForfeitAndExit: (moves: number) => void;
   onRematch: () => void;
   onGameEnd: (status: Side | "draw", moves: number) => void;
 }) {
@@ -748,7 +759,12 @@ function ArenaGame({
     >
       {/* top bar */}
       <div className="ar-bar">
-        <button className="ar-bar-exit" onClick={() => onExit(history.length)}>
+        <button
+          className="ar-bar-exit"
+          onClick={() =>
+            status ? onExit() : onForfeitAndExit(history.length)
+          }
+        >
           ← leave
         </button>
         <div className="ar-bar-venue">

@@ -33,9 +33,11 @@ export const start = mutation({
       });
     }
 
-    // Dedupe: if the player already has an unfinished game against this
-    // agent, reuse it instead of creating a second row. Prevents a refresh
-    // storm from spawning phantom losses once the cron catches them.
+    // Dedupe: if the player already has a *fresh* unfinished game against
+    // this agent, reuse it. A refresh storm won't spawn phantom losses.
+    // Games older than the abandon threshold are ignored here — they'll
+    // be swept up by the forfeit cron and the player gets a new row.
+    const cutoff = Date.now() - ABANDON_THRESHOLD_MS;
     const openGame = await ctx.db
       .query("games")
       .withIndex("by_player", (q) => q.eq("playerId", playerId))
@@ -43,6 +45,7 @@ export const start = mutation({
         q.and(
           q.eq(q.field("agentId"), agentId),
           q.eq(q.field("endedAt"), undefined),
+          q.gte(q.field("startedAt"), cutoff),
         ),
       )
       .first();
