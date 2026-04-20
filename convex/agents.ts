@@ -1,31 +1,11 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { query } from "./_generated/server";
 
-// Agents seed themselves on first reference. The frontend treats an agent
-// row as "may not exist yet" — landing card falls back to defaults if the
-// query returns null.
-export const ensure = mutation({
-  args: {
-    agentId: v.string(),
-    displayName: v.string(),
-  },
-  handler: async (ctx, { agentId, displayName }) => {
-    const existing = await ctx.db
-      .query("agents")
-      .withIndex("by_agentId", (q) => q.eq("agentId", agentId))
-      .unique();
-    if (existing) return existing._id;
-    return await ctx.db.insert("agents", {
-      agentId,
-      displayName,
-      gamesPlayed: 0,
-      wins: 0,
-      losses: 0,
-      draws: 0,
-      totalMoves: 0,
-    });
-  },
-});
+// Agents are lazy-seeded inline by games.start on the first call for a new
+// agentId — there's no public mutation to insert agent rows. This keeps
+// agentId + displayName server-authoritative (derived from the call that
+// opens an actual game) instead of client-controlled, and removes one more
+// public write surface a script could abuse.
 
 export const getByAgentId = query({
   args: { agentId: v.string() },
