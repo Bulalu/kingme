@@ -115,4 +115,4 @@ Issues and PRs welcome. For anything non-trivial, open an issue first so we can 
 
 ## License
 
-[MIT](LICENSE)
+[MIT](LICENSE) © Bulalu
