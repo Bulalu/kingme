@@ -254,7 +254,14 @@ class AlphaBetaAgent:
 
     def _tt_key(self, state: CheckersState) -> tuple[object, ...]:
         repetition_signature = tuple(sorted(state.repetition_counts.items()))
-        return state.position_key()[0], state.side_to_move, state.forced_square, state.no_progress_count, repetition_signature
+        return (
+            state.position_key()[0],
+            state.side_to_move,
+            state.forced_square,
+            tuple(sorted(state.pending_captures)),
+            state.no_progress_count,
+            repetition_signature,
+        )
 
     def _lookup_move(self, state: CheckersState, actions: tuple[int, ...] | None) -> MacroMove | None:
         if actions is None:
@@ -355,4 +362,3 @@ class AlphaBetaAgent:
 
 def principal_variation_to_pdn(result: SearchResult) -> list[str]:
     return [macro_move_to_pdn(move) for move in result.principal_variation]
-

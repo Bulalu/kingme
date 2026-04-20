@@ -38,6 +38,19 @@ Clients should not hardcode search internals beyond what the API returns. Treat 
 3. Clients should preserve and round-trip the full `state` payload exactly as returned.
 4. Clients should send PDN move strings returned by the API, not invent their own move encoding.
 
+## Current Ruleset Notes
+
+The live engine currently serves the Tanzanian-style 8x8 variant used by the product team:
+
+- men move forward diagonally one square
+- men capture forward only
+- captures are mandatory
+- kings are flying kings and can travel multiple empty diagonal squares
+- kings can capture from distance and may land on any empty square beyond the captured piece
+- during a multi-capture sequence, captured pieces stay on the board until the sequence is finished
+
+Frontend code should treat all legality and landing-square generation as engine-owned behavior.
+
 ## Data Models
 
 ### `StatePayload`
@@ -58,6 +71,7 @@ Represents the full playable game state.
   ],
   "side_to_move": "red",
   "forced_square": null,
+  "pending_captures": [],
   "no_progress_count": 0,
   "repetition_counts": [
     {
@@ -78,6 +92,9 @@ Fields:
   - `"red"` or `"white"`
 - `forced_square`
   - `null` unless the current player is in the middle of a forced multi-jump sequence
+- `pending_captures`
+  - playable-square indexes for pieces already jumped in the current capture sequence
+  - these pieces stay on the board visually/internally until the sequence completes
 - `no_progress_count`
   - move counter used in draw logic
 - `repetition_counts`

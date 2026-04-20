@@ -22,6 +22,7 @@ class StatePayload(BaseModel):
     rows: list[str]
     side_to_move: Literal["red", "white"]
     forced_square: int | None = None
+    pending_captures: list[int] = Field(default_factory=list)
     no_progress_count: int = 0
     repetition_counts: list[RepetitionCountPayload] = Field(default_factory=list)
 

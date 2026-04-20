@@ -9,7 +9,6 @@ from .checkers_v2.action_encoding import (
     canonicalize_square,
     coords_to_square,
     decode_action,
-    destination_coords,
     playable_square_coords,
     square_to_coords,
 )
@@ -59,12 +58,7 @@ _ALL_DIRECTIONS = ((-1, -1), (-1, 1), (1, -1), (1, 1))
 
 
 def action_destination_square(action: int) -> int:
-    decoded = decode_action(action)
-    dest_row, dest_col = destination_coords(decoded.source_square, decoded.move_type)
-    for square, coords in enumerate(playable_square_coords()):
-        if coords == (dest_row, dest_col):
-            return square
-    raise ValueError(f"destination for action {action} is not a playable square")
+    return decode_action(action).destination_square
 
 
 def _step_directions(piece: int) -> tuple[tuple[int, int], ...]:
@@ -95,8 +89,39 @@ def _jump_landing_square(square: int, delta_row: int, delta_col: int) -> int | N
     return coords_to_square(landing_row, landing_col)
 
 
+def _ray_squares(square: int, delta_row: int, delta_col: int) -> tuple[int, ...]:
+    row, col = square_to_coords(square)
+    squares: list[int] = []
+    row += delta_row
+    col += delta_col
+    while 0 <= row < 8 and 0 <= col < 8:
+        if (row + col) % 2 == 1:
+            squares.append(coords_to_square(row, col))
+        row += delta_row
+        col += delta_col
+    return tuple(squares)
+
+
 def _is_enemy_piece(piece: int, other: int) -> bool:
     return piece != 0 and other != 0 and ((piece > 0) != (other > 0))
+
+
+def _mark_threatened_piece(
+    piece: int,
+    square: int,
+    threatened_red_men: set[int],
+    threatened_red_kings: set[int],
+    threatened_white_men: set[int],
+    threatened_white_kings: set[int],
+) -> None:
+    if piece == RED_MAN:
+        threatened_red_men.add(square)
+    elif piece == RED_KING:
+        threatened_red_kings.add(square)
+    elif piece == WHITE_MAN:
+        threatened_white_men.add(square)
+    elif piece == WHITE_KING:
+        threatened_white_kings.add(square)
 
 
 def legal_macro_moves(state: CheckersState) -> list[MacroMove]:
@@ -115,7 +140,7 @@ def legal_macro_moves(state: CheckersState) -> list[MacroMove]:
             source_piece=source_piece,
             actions=(action,),
             path=(source_square, action_destination_square(action)),
-            capture_count=int(decode_action(action).move_type.startswith("J")),
+            capture_count=int(decode_action(action).is_capture),
             out=moves,
         )
     moves.sort(key=lambda move: move.actions)
@@ -155,7 +180,7 @@ def _extend_macro_move(
             source_piece=source_piece,
             actions=actions + (action,),
             path=path + (action_destination_square(action),),
-            capture_count=capture_count + int(decode_action(action).move_type.startswith("J")),
+            capture_count=capture_count + int(decode_action(action).is_capture),
             out=out,
         )
 
@@ -317,24 +342,30 @@ def structural_balance_terms(state: CheckersState, max_runaway_steps: int = 3) -
         if is_king:
             mobility = 0
             for delta_row, delta_col in _ALL_DIRECTIONS:
-                destination_square = _adjacent_square(square, delta_row, delta_col)
-                if destination_square is not None and board[destination_square] == 0:
-                    mobility += 1
-                middle_square = _adjacent_square(square, delta_row, delta_col)
-                landing_square = _jump_landing_square(square, delta_row, delta_col)
-                if middle_square is None or landing_square is None:
-                    continue
-                middle_piece = board[middle_square]
-                if _is_enemy_piece(piece, middle_piece) and board[landing_square] == 0:
-                    mobility += 2
-                    if middle_piece == RED_MAN:
-                        threatened_red_men.add(middle_square)
-                    elif middle_piece == RED_KING:
-                        threatened_red_kings.add(middle_square)
-                    elif middle_piece == WHITE_MAN:
-                        threatened_white_men.add(middle_square)
-                    elif middle_piece == WHITE_KING:
-                        threatened_white_kings.add(middle_square)
+                seen_enemy: int | None = None
+                seen_enemy_piece = 0
+                for target_square in _ray_squares(square, delta_row, delta_col):
+                    target_piece = board[target_square]
+                    if target_piece == 0:
+                        if seen_enemy is None:
+                            mobility += 1
+                        else:
+                            mobility += 2
+                            _mark_threatened_piece(
+                                seen_enemy_piece,
+                                seen_enemy,
+                                threatened_red_men,
+                                threatened_red_kings,
+                                threatened_white_men,
+                                threatened_white_kings,
+                            )
+                        continue
+                    if not _is_enemy_piece(piece, target_piece):
+                        break
+                    if seen_enemy is not None:
+                        break
+                    seen_enemy = target_square
+                    seen_enemy_piece = target_piece
             if mobility <= 1:
                 mobility -= 1
                 king_trap += 1 if not is_red else -1
@@ -398,4 +429,3 @@ def current_player_sign(player: int) -> int:
     if player not in (RED, WHITE):
         raise ValueError(f"unsupported player {player}")
     return 1 if player == RED else -1
-

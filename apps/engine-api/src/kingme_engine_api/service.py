@@ -47,6 +47,7 @@ def _serialize_state(state: CheckersState) -> StatePayload:
         rows=state.to_ascii().splitlines(),
         side_to_move=_color_to_name(state.side_to_move),
         forced_square=state.forced_square,
+        pending_captures=sorted(state.pending_captures),
         no_progress_count=state.no_progress_count,
         repetition_counts=repetition_counts,
     )
@@ -61,6 +62,7 @@ def _deserialize_state(payload: StatePayload) -> CheckersState:
         payload.rows,
         side_to_move=_name_to_color(payload.side_to_move),
         forced_square=payload.forced_square,
+        pending_captures=payload.pending_captures,
         no_progress_count=payload.no_progress_count,
         repetition_counts=repetition_counts or None,
     )
