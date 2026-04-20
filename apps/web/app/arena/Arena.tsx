@@ -125,6 +125,20 @@ function PlayerCard({
         <div className="ar-pc-avatar">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img src={agent.img} alt={name} />
+          {active && (
+            <div
+              className="ar-pc-thinking-bubble"
+              role="status"
+              aria-label={`${name} is thinking`}
+            >
+              <span className="ar-pc-thinking-emoji">🤔</span>
+              <span className="ar-pc-thinking-dots">
+                <span></span>
+                <span></span>
+                <span></span>
+              </span>
+            </div>
+          )}
         </div>
       ) : (
         <div className="ar-pc-avatar ar-pc-avatar-you">
