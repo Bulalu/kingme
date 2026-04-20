@@ -1437,17 +1437,17 @@ button { font: inherit; cursor: pointer; border: 0; background: transparent; col
   .km-chrome-title { font-size: 9px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .km-board-footer { font-size: 9px; gap: 8px; flex-wrap: wrap; }
   .km-hero-ctas { flex-direction: column; align-items: stretch; }
-  /* Leaderboard: drop L + streak columns on phones, only #/handle/elo/W fit */
+  /* Leaderboard on phones: keep all six columns visible — #, handle,
+     win%, W, L, games — by shrinking the numeric columns and relying
+     on the handle column to truncate with ellipsis. */
   .km-lb-header,
   .km-lb-row {
-    grid-template-columns: 32px 1fr 56px 36px;
-    gap: 10px;
-    padding: 12px 14px;
-    font-size: 12px;
+    grid-template-columns: 28px minmax(0, 1fr) 52px 28px 28px 40px;
+    gap: 8px;
+    padding: 12px 10px;
+    font-size: 11px;
   }
-  .km-lb-header { padding: 10px 14px; }
-  .km-lb-header > :nth-child(n + 5),
-  .km-lb-row > :nth-child(n + 5) { display: none; }
+  .km-lb-header { padding: 10px 10px; }
   .km-lb-name { gap: 6px; min-width: 0; }
   .km-lb-name > span:not(.km-tag) { /* untouched */ }
   .km-lb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
