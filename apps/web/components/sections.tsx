@@ -4,6 +4,7 @@
 // Ported from the design package (sections.jsx).
 
 import { useMemo, useState, type ReactNode } from "react";
+import Image from "next/image";
 import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
@@ -112,8 +113,13 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
         <div className="km-hero-right">
           <div className="km-hero-opponent">
             <div className="km-opp-portrait">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/assets/sinza.webp" alt="Sinza" />
+              <Image
+                src="/assets/sinza.webp"
+                alt="Sinza"
+                fill
+                sizes="88px"
+                priority
+              />
               <div className="km-opp-badge">● LIVE</div>
             </div>
             <div className="km-opp-meta">
@@ -258,8 +264,12 @@ export function Roster() {
         {agents.map((a) => (
           <article key={a.id} className={"km-agent km-agent-" + a.status}>
             <div className="km-agent-portrait">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={a.img} alt={a.name} />
+              <Image
+                src={a.img}
+                alt={a.name}
+                fill
+                sizes="(max-width: 768px) 100vw, 400px"
+              />
               <div className="km-agent-overlay">
                 <span className={"km-agent-pill km-agent-pill-" + a.status}>
                   {a.status === "live" ? "● live · play now" : "◌ in training"}
