@@ -9,13 +9,22 @@ const ABANDON_THRESHOLD_MS = 30 * 60 * 1000;
 // Open a new game row when the arena boots. Returns a gameId the client
 // holds onto until `complete` is called. Also makes sure the agent row
 // exists so denormalized counters can be bumped later.
+//
+// Keyed on anonId rather than playerId — the server resolves it so a
+// client can't start a game attributed to some other player they guessed.
 export const start = mutation({
   args: {
-    playerId: v.id("players"),
+    anonId: v.string(),
     agentId: v.string(),
     agentDisplayName: v.string(),
   },
-  handler: async (ctx, { playerId, agentId, agentDisplayName }) => {
+  handler: async (ctx, { anonId, agentId, agentDisplayName }) => {
+    const player = await ctx.db
+      .query("players")
+      .withIndex("by_anonId", (q) => q.eq("anonId", anonId))
+      .unique();
+    if (!player) throw new Error("player not found");
+
     // Lazy-seed agent row.
     const existingAgent = await ctx.db
       .query("agents")
@@ -40,7 +49,7 @@ export const start = mutation({
     const cutoff = Date.now() - ABANDON_THRESHOLD_MS;
     const openGame = await ctx.db
       .query("games")
-      .withIndex("by_player", (q) => q.eq("playerId", playerId))
+      .withIndex("by_player", (q) => q.eq("playerId", player._id))
       .filter((q) =>
         q.and(
           q.eq(q.field("agentId"), agentId),
@@ -52,7 +61,7 @@ export const start = mutation({
     if (openGame) return openGame._id;
 
     return await ctx.db.insert("games", {
-      playerId,
+      playerId: player._id,
       agentId,
       startedAt: Date.now(),
       moves: 0,
@@ -63,9 +72,13 @@ export const start = mutation({
 // Mark a game as finished and bump denormalized counters on the player and
 // agent. `winner` is from the perspective of the human:
 //   "human" = player won, "agent" = sinza won, "draw" = neither.
+//
+// anonId is checked against the game's player to prevent a client from
+// completing someone else's game with a scraped gameId.
 export const complete = mutation({
   args: {
     gameId: v.id("games"),
+    anonId: v.string(),
     winner: v.union(
       v.literal("human"),
       v.literal("agent"),
@@ -73,10 +86,17 @@ export const complete = mutation({
     ),
     moves: v.number(),
   },
-  handler: async (ctx, { gameId, winner, moves }) => {
+  handler: async (ctx, { gameId, anonId, winner, moves }) => {
     const game = await ctx.db.get(gameId);
     if (!game) {
       throw new Error(`game ${gameId} not found`);
+    }
+    const caller = await ctx.db
+      .query("players")
+      .withIndex("by_anonId", (q) => q.eq("anonId", anonId))
+      .unique();
+    if (!caller || caller._id !== game.playerId) {
+      throw new Error("not your game");
     }
     // Idempotency guard — refreshes/re-renders shouldn't double-count.
     if (game.endedAt !== undefined) return;
