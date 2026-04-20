@@ -106,6 +106,24 @@ def _is_enemy_piece(piece: int, other: int) -> bool:
     return piece != 0 and other != 0 and ((piece > 0) != (other > 0))
 
 
+def _mark_threatened_piece(
+    piece: int,
+    square: int,
+    threatened_red_men: set[int],
+    threatened_red_kings: set[int],
+    threatened_white_men: set[int],
+    threatened_white_kings: set[int],
+) -> None:
+    if piece == RED_MAN:
+        threatened_red_men.add(square)
+    elif piece == RED_KING:
+        threatened_red_kings.add(square)
+    elif piece == WHITE_MAN:
+        threatened_white_men.add(square)
+    elif piece == WHITE_KING:
+        threatened_white_kings.add(square)
+
+
 def legal_macro_moves(state: CheckersState) -> list[MacroMove]:
     if state.is_terminal():
         return []
@@ -325,24 +343,29 @@ def structural_balance_terms(state: CheckersState, max_runaway_steps: int = 3) -
             mobility = 0
             for delta_row, delta_col in _ALL_DIRECTIONS:
                 seen_enemy: int | None = None
+                seen_enemy_piece = 0
                 for target_square in _ray_squares(square, delta_row, delta_col):
                     target_piece = board[target_square]
                     if target_piece == 0:
-                        mobility += 1 if seen_enemy is None else 2
+                        if seen_enemy is None:
+                            mobility += 1
+                        else:
+                            mobility += 2
+                            _mark_threatened_piece(
+                                seen_enemy_piece,
+                                seen_enemy,
+                                threatened_red_men,
+                                threatened_red_kings,
+                                threatened_white_men,
+                                threatened_white_kings,
+                            )
                         continue
                     if not _is_enemy_piece(piece, target_piece):
                         break
                     if seen_enemy is not None:
                         break
                     seen_enemy = target_square
-                    if target_piece == RED_MAN:
-                        threatened_red_men.add(target_square)
-                    elif target_piece == RED_KING:
-                        threatened_red_kings.add(target_square)
-                    elif target_piece == WHITE_MAN:
-                        threatened_white_men.add(target_square)
-                    elif target_piece == WHITE_KING:
-                        threatened_white_kings.add(target_square)
+                    seen_enemy_piece = target_piece
             if mobility <= 1:
                 mobility -= 1
                 king_trap += 1 if not is_red else -1

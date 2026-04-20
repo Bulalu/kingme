@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from kingme_engine_api.runtime.checkers_v2.action_encoding import coords_to_square
 from kingme_engine_api.runtime.checkers_v2.runtime import RED, WHITE_MAN, CheckersState
-from kingme_engine_api.runtime.engine import apply_macro_move, legal_macro_moves
+from kingme_engine_api.runtime.engine import apply_macro_move, legal_macro_moves, structural_balance_terms
 
 
 def test_flying_king_can_slide_multiple_diagonal_squares() -> None:
@@ -122,3 +122,23 @@ def test_flying_king_multicapture_keeps_jumped_piece_until_turn_end() -> None:
     assert state.board[first_captured_square] == 0
     assert state.board[second_captured_square] == 0
     assert state.side_to_move == -RED
+
+
+def test_blocked_flying_king_ray_does_not_count_as_threat() -> None:
+    state = CheckersState.from_rows(
+        (
+            ".....w..",
+            "....w...",
+            "........",
+            "..R.....",
+            "........",
+            "........",
+            "........",
+            "........",
+        ),
+        side_to_move=RED,
+    )
+
+    terms = structural_balance_terms(state)
+
+    assert terms.threatened_men == 0
