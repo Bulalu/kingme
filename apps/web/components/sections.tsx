@@ -41,6 +41,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
     sinzaStats && sinzaStats.gamesPlayed > 0
       ? fmtPct(sinzaStats.losses, sinzaStats.gamesPlayed)
       : "—";
+  const totalMoves = sinzaStats ? fmtInt(sinzaStats.totalMoves) : "—";
   const taunts: Record<
     string,
     {
@@ -104,7 +105,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <div className="km-hero-meta">
             <Stat label="games played vs bot" value={sinzaGames} />
             <Stat label="humans who won" value={humansWonRate} />
-            <Stat label="avg think time" value="0.8s" />
+            <Stat label="moves he's made" value={totalMoves} />
           </div>
         </div>
 
@@ -119,10 +120,6 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
               <div className="km-opp-label">your opponent</div>
               <div className="km-opp-name">SINZA</div>
               <div className="km-opp-stats">
-                <span>
-                  <b>2,418</b> elo
-                </span>
-                <span>·</span>
                 <span>
                   <b>{sinzaGames}</b> games
                 </span>
