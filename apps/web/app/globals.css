@@ -1341,6 +1341,12 @@ button { font: inherit; cursor: pointer; border: 0; background: transparent; col
   color: var(--accent);
   border-bottom-color: var(--accent);
 }
+.km-footer-gh {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+.km-footer-gh svg { display: inline-block; vertical-align: -2px; }
 
 /* ══ Tweaks panel ══ */
 .km-tweaks {
