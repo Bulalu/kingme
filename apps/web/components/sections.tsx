@@ -174,17 +174,21 @@ function Stat({ label, value }: { label: string; value: string }) {
 // ── Marquee ────────────────────────────────────────────────────
 export function Marquee() {
   const items = [
-    "IT CROWNED ITSELF",
+    "SKILL ISSUE",
     "★",
-    "YOU CAN'T OUT-THINK A THINKING MACHINE",
+    "BRO",
     "★",
-    "41,287 GAMES · 1,279 HUMAN WINS",
+    "YOU'RE COOKED",
     "★",
-    "NO OPENING BOOK",
+    "SINZA DOESN'T MISS",
     "★",
-    "NO LOOKUP TABLES",
+    "WHY DO YOU TRY",
     "★",
-    "JUST A NETWORK THAT DIDN'T STOP PLAYING",
+    "L",
+    "★",
+    "NJOO TUZINESE WEWE",
+    "★",
+    "IT'S OVER",
     "★",
   ];
   const full = [...items, ...items, ...items];
