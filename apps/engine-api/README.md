@@ -71,6 +71,27 @@ and sets:
 
 That means the first deployed version is ready to serve the built-in alpha-beta agents immediately.
 
+## Keeping Modal Warm
+
+The live engine API is configured to stay warm on Modal:
+
+- `min_containers=1`
+  keeps one container running so the service does not scale all the way to zero.
+- `scaledown_window=20 * 60`
+  keeps burst containers around for up to 20 minutes before scaling them down.
+
+What this improves:
+
+- the first move of a new game
+- the first move after a period of inactivity
+- repeated sessions that arrive close together
+
+What this does **not** improve:
+
+- the raw search time of a hard move once the container is already warm
+
+So if move latency is still high after warm-up, that is a search/runtime problem, not a cold-start problem.
+
 If you want a released checkpoint-backed bot on Modal later, add the checkpoint as a release artifact first, then point an agent manifest at its container path.
 
 ## Live Product Agent

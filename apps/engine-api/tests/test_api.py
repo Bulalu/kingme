@@ -46,3 +46,24 @@ def test_apply_and_reply_flow_works_for_builtin_agent() -> None:
     payload = agent_response.json()
     assert payload["move"]["pdn"]
     assert payload["search"]["depth"] >= 0
+
+
+def test_play_turn_combines_human_move_and_agent_reply() -> None:
+    initial_response = client.get("/v1/state/initial")
+    assert initial_response.status_code == 200
+    state = initial_response.json()
+
+    legal_response = client.post("/v1/state/legal-moves", json={"state": state})
+    assert legal_response.status_code == 200
+    move_pdn = legal_response.json()["legal_moves"][0]["pdn"]
+
+    turn_response = client.post(
+        "/v1/play-turn",
+        json={"agent_id": "sinza", "state": state, "move_pdn": move_pdn},
+    )
+    assert turn_response.status_code == 200
+    payload = turn_response.json()
+    assert payload["applied_move"]["pdn"] == move_pdn
+    assert payload["agent"]["id"] == "sinza"
+    assert payload["agent_move"]["pdn"]
+    assert payload["search"]["depth"] >= 0

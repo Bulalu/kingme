@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from dataclasses import asdict
-
 from .registry import AgentRegistry, ReleasedAgentConfig
 from .runtime.engine import MacroMove, apply_macro_move, legal_macro_moves, macro_move_to_pdn
 from .runtime.checkers_v2.runtime import DRAW, RED, WHITE, CheckersState
@@ -11,6 +9,7 @@ from .schemas import (
     ApplyMoveResponse,
     LegalMovesResponse,
     MovePayload,
+    PlayTurnResponse,
     SearchPayload,
     StatePayload,
 )
@@ -154,10 +153,54 @@ class EngineService:
             ),
         )
 
+    def play_turn(
+        self,
+        agent_id: str,
+        state_payload: StatePayload,
+        move_pdn: str,
+    ) -> PlayTurnResponse:
+        state = _deserialize_state(state_payload)
+        human_move = self._move_from_pdn(state, move_pdn)
+        apply_macro_move(state, human_move)
+
+        winner = _serialize_winner(state)
+        if winner is not None:
+            return PlayTurnResponse(
+                applied_move=_serialize_move(human_move),
+                agent=None,
+                agent_move=None,
+                state=_serialize_state(state),
+                legal_moves=[_serialize_move(item) for item in legal_macro_moves(state)],
+                winner=winner,
+                search=None,
+            )
+
+        config = self.registry.get_config(agent_id)
+        agent = self.registry.get_agent(agent_id)
+        result = agent.search(state)
+        if result.best_move is None:
+            raise ValueError(f"agent {agent_id} returned no move for non-terminal state")
+
+        bot_move = result.best_move
+        apply_macro_move(state, bot_move)
+        return PlayTurnResponse(
+            applied_move=_serialize_move(human_move),
+            agent=_serialize_agent(config),
+            agent_move=_serialize_move(bot_move),
+            state=_serialize_state(state),
+            legal_moves=[_serialize_move(item) for item in legal_macro_moves(state)],
+            winner=_serialize_winner(state),
+            search=SearchPayload(
+                score=float(result.score),
+                depth=int(result.depth),
+                nodes=int(result.nodes),
+                principal_variation=[macro_move_to_pdn(item) for item in result.principal_variation],
+            ),
+        )
+
     def _move_from_pdn(self, state: CheckersState, move_pdn: str) -> MacroMove:
         legal_moves = legal_macro_moves(state)
         for move in legal_moves:
             if macro_move_to_pdn(move) == move_pdn:
                 return move
         raise ValueError(f"illegal move for current state: {move_pdn}")
-

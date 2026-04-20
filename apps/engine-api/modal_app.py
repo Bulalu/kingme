@@ -1,18 +1,6 @@
 from __future__ import annotations
 
-import sys
-from pathlib import Path
-
 import modal
-
-
-APP_ROOT = Path(__file__).resolve().parent
-SRC_ROOT = APP_ROOT / "src"
-
-if str(SRC_ROOT) not in sys.path:
-    sys.path.insert(0, str(SRC_ROOT))
-
-from kingme_engine_api.api import create_app
 
 
 app = modal.App("kingme-engine-api")
@@ -32,7 +20,22 @@ image = (
 )
 
 
-@app.function(image=image, cpu=4.0, memory=4096, timeout=300)
+@app.function(
+    image=image,
+    cpu=4.0,
+    memory=4096,
+    timeout=300,
+    # Keep one container running at all times so requests don't need to boot
+    # the service from zero.
+    min_containers=1,
+    # Let any extra containers from short bursts stay hot for longer before
+    # Modal scales them back down.
+    scaledown_window=20 * 60,
+)
 @modal.asgi_app(label="kingme-engine-api")
 def fastapi_app():
+    # Imported inside the function so the Modal CLI can discover this app
+    # without needing fastapi installed locally — the runtime image has it.
+    from kingme_engine_api.api import create_app
+
     return create_app()

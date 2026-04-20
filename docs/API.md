@@ -304,6 +304,70 @@ Use this when:
 - the user confirms a move
 - you want the server to advance the authoritative state
 
+### `POST /v1/play-turn`
+
+Applies the human move and returns Sinza's reply in the same request.
+
+This is the preferred live-play endpoint for the frontend because it removes one full backend round trip from the critical path.
+
+Request:
+
+```json
+{
+  "agent_id": "sinza",
+  "state": { "...": "current state payload" },
+  "move_pdn": "9-14"
+}
+```
+
+Response:
+
+```json
+{
+  "applied_move": {
+    "pdn": "9-14",
+    "actions": [65],
+    "path": [8, 13],
+    "is_capture": false,
+    "capture_count": 0,
+    "promotes": false,
+    "final_square": 13
+  },
+  "agent": {
+    "id": "sinza",
+    "display_name": "Sinza",
+    "description": "Current strongest owned release. Upgraded alpha-beta search running the April 19 strong-mode depth.",
+    "engine": "alphabeta",
+    "depth": 7,
+    "ready": true,
+    "public": true
+  },
+  "agent_move": {
+    "pdn": "22-18",
+    "actions": [169],
+    "path": [21, 17],
+    "is_capture": false,
+    "capture_count": 0,
+    "promotes": false,
+    "final_square": 17
+  },
+  "state": { "...": "post-agent state payload" },
+  "legal_moves": [],
+  "winner": null,
+  "search": {
+    "score": 41.0,
+    "depth": 7,
+    "nodes": 128430,
+    "principal_variation": ["22-18", "10-15", "18x9"]
+  }
+}
+```
+
+Notes:
+
+- if the human move ends the game immediately, `agent` and `agent_move` will be `null`
+- the returned `state` is the final authoritative state after the full turn sequence
+
 ### `POST /v1/agent-move`
 
 Asks a named engine agent to make the next move.
@@ -375,13 +439,13 @@ Recommended loop for the frontend:
 2. Store that full `state`
 3. Call `POST /v1/state/legal-moves`
 4. Let the user pick one of the returned `legal_moves`
-5. Call `POST /v1/state/apply-move`
+5. Call `POST /v1/play-turn` with:
+   - `agent_id: "sinza"`
+   - current state
+   - chosen `move_pdn`
 6. Replace local state with returned `state`
 7. If `winner` is not `null`, stop
-8. Call `POST /v1/agent-move` with `agent_id: "sinza"`
-9. Replace local state with returned `state`
-10. If `winner` is not `null`, stop
-11. Repeat
+8. Repeat
 
 ## Error Contract
 
@@ -488,6 +552,33 @@ curl -sS https://ctrlx--kingme-engine-api.modal.run/v1/agent-move \
   -H 'content-type: application/json' \
   -d '{
     "agent_id": "sinza",
+    "state": {
+      "rows": [
+        ".r.r.r.r",
+        "r.r.r.r.",
+        ".r.r.r.r",
+        "........",
+        "........",
+        "w.w.w.w.",
+        ".w.w.w.w",
+        "w.w.w.w."
+      ],
+      "side_to_move": "red",
+      "forced_square": null,
+      "no_progress_count": 0,
+      "repetition_counts": []
+    }
+  }'
+```
+
+Play a full human turn and get Sinza's reply:
+
+```bash
+curl -sS https://ctrlx--kingme-engine-api.modal.run/v1/play-turn \
+  -H 'content-type: application/json' \
+  -d '{
+    "agent_id": "sinza",
+    "move_pdn": "9-14",
     "state": {
       "rows": [
         ".r.r.r.r",
