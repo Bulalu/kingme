@@ -8,6 +8,9 @@
     "build": "echo \"Wire build scripts after apps are created\"",
     "lint": "echo \"Wire lint scripts after apps are created\"",
     "test": "echo \"Wire test scripts after apps are created\""
+  },
+  "devDependencies": {
+    "convex": "^1.35.1"
   }
 }
 
