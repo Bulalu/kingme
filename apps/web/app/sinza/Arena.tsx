@@ -338,17 +338,17 @@ export default function Arena({
 
   const handleSubmitName = useCallback(
     (name: string) => {
-      if (!player) return;
-      setPlayerName({ playerId: player._id, name });
+      if (!anonId) return;
+      setPlayerName({ anonId, name });
     },
-    [player, setPlayerName],
+    [anonId, setPlayerName],
   );
   const handleSkipName = useCallback(
     (memeName: string) => {
-      if (!player) return;
-      setPlayerName({ playerId: player._id, name: memeName });
+      if (!anonId) return;
+      setPlayerName({ anonId, name: memeName });
     },
-    [player, setPlayerName],
+    [anonId, setPlayerName],
   );
 
   // ── Game record lifecycle ─────────────────────────────────────
@@ -360,12 +360,13 @@ export default function Arena({
   // Open a games row once the player exists, has a name, and we don't
   // already have a current gameId (or we just bumped gameKey for rematch).
   useEffect(() => {
+    if (!anonId) return;
     if (!player || !player.name) return;
     if (gameId !== null) return;
     if (startingRef.current) return;
     startingRef.current = true;
     startGame({
-      playerId: player._id,
+      anonId,
       agentId: agent.id,
       agentDisplayName: agent.name,
     })
@@ -373,7 +374,7 @@ export default function Arena({
       .finally(() => {
         startingRef.current = false;
       });
-  }, [player, gameId, gameKey, startGame, agent.id, agent.name]);
+  }, [anonId, player, gameId, gameKey, startGame, agent.id, agent.name]);
 
   // Plain navigation — no forfeit. Used when the game is already in a
   // terminal state (PostGame screen) where handleGameEnd has written or
@@ -388,16 +389,19 @@ export default function Arena({
   // before navigating.
   const onForfeitAndExit = useCallback(
     (movesPlayed: number) => {
-      if (gameId) {
-        completeGame({ gameId, winner: "agent", moves: movesPlayed }).catch(
-          () => {
-            // Idempotent on the server — swallow and navigate.
-          },
-        );
+      if (gameId && anonId) {
+        completeGame({
+          gameId,
+          anonId,
+          winner: "agent",
+          moves: movesPlayed,
+        }).catch(() => {
+          // Idempotent on the server — swallow and navigate.
+        });
       }
       router.push("/");
     },
-    [gameId, completeGame, router],
+    [gameId, anonId, completeGame, router],
   );
   const onRematch = () => {
     setGameId(null);
@@ -409,15 +413,15 @@ export default function Arena({
   // game from inside ArenaGame when status flips.
   const handleGameEnd = useCallback(
     (status: Side | "draw", moves: number) => {
-      if (!gameId) return;
+      if (!gameId || !anonId) return;
       const winner: "human" | "agent" | "draw" =
         status === "draw" ? "draw" : status === "red" ? "human" : "agent";
-      completeGame({ gameId, winner, moves }).catch(() => {
+      completeGame({ gameId, anonId, winner, moves }).catch(() => {
         // Mutation is idempotent on the server side; swallowing here is
         // safe — the user already sees the post-game card.
       });
     },
-    [gameId, completeGame],
+    [gameId, anonId, completeGame],
   );
 
   // Show modal when player has loaded but hasn't picked a name yet.
