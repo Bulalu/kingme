@@ -5,6 +5,7 @@ import {
   JetBrains_Mono,
   Playfair_Display,
 } from "next/font/google";
+import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 
 const inter = Inter({
   subsets: ["latin"],
@@ -52,7 +53,9 @@ export default function RootLayout({
       data-variant="noir"
       className={`${inter.variable} ${playfair.variable} ${anton.variable} ${jetbrains.variable}`}
     >
-      <body>{children}</body>
+      <body>
+        <ConvexClientProvider>{children}</ConvexClientProvider>
+      </body>
     </html>
   );
 }

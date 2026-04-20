@@ -5,6 +5,8 @@
 
 import { useMemo, useState, type ReactNode } from "react";
 import Link from "next/link";
+import { useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
 import Board from "./Board";
 
 // ── Hero ───────────────────────────────────────────────────────
@@ -16,7 +18,29 @@ export interface HeroProps {
   setMode: (m: "demo" | "play") => void;
 }
 
+function fmtInt(n: number) {
+  return n.toLocaleString("en-US");
+}
+
+function fmtPct(n: number, d: number) {
+  if (d <= 0) return "—";
+  const pct = (n / d) * 100;
+  return pct >= 10 ? `${pct.toFixed(0)}%` : `${pct.toFixed(1)}%`;
+}
+
 export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
+  // Live agent counters from Convex. Falls back to hardcoded copy until
+  // the first game is recorded (or while the query is loading).
+  const sinzaStats = useQuery(api.agents.getByAgentId, { agentId: "sinza" });
+  const sinzaGames = sinzaStats ? fmtInt(sinzaStats.gamesPlayed) : "0";
+  const sinzaWinRate =
+    sinzaStats && sinzaStats.gamesPlayed > 0
+      ? fmtPct(sinzaStats.wins, sinzaStats.gamesPlayed)
+      : "—";
+  const humansWonRate =
+    sinzaStats && sinzaStats.gamesPlayed > 0
+      ? fmtPct(sinzaStats.losses, sinzaStats.gamesPlayed)
+      : "—";
   const taunts: Record<
     string,
     {
@@ -78,8 +102,8 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           </div>
 
           <div className="km-hero-meta">
-            <Stat label="games played vs bot" value="41,287" />
-            <Stat label="humans who won" value="3.1%" />
+            <Stat label="games played vs bot" value={sinzaGames} />
+            <Stat label="humans who won" value={humansWonRate} />
             <Stat label="avg think time" value="0.8s" />
           </div>
         </div>
@@ -100,11 +124,11 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 </span>
                 <span>·</span>
                 <span>
-                  <b>41,287</b> games
+                  <b>{sinzaGames}</b> games
                 </span>
                 <span>·</span>
                 <span>
-                  <b>96.9%</b> win rate
+                  <b>{sinzaWinRate}</b> win rate
                 </span>
               </div>
               <div className="km-opp-quote">&ldquo;njoo tuzinese wewe.....&rdquo;</div>

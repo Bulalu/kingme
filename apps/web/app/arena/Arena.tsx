@@ -6,6 +6,11 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
+import { useMutation, useQuery } from "convex/react";
+import { api } from "@convex/_generated/api";
+import type { Id } from "@convex/_generated/dataModel";
+import NamePromptModal from "./NamePromptModal";
+import { generateMemeName, getOrCreateAnonId } from "@/lib/identity";
 import {
   isBlack,
   isKing,
@@ -297,20 +302,123 @@ export default function Arena({
   const agent = AGENTS[agentId] || AGENTS.sinza;
   const bs = BOARD_STYLES[boardStyle] || BOARD_STYLES.emerald;
 
-  // gameKey lets us reset all in-game state by remounting via key prop.
+  // ── Anonymous identity ────────────────────────────────────────
+  // anonId is generated/read on first paint so the player record stays
+  // stable across visits from this browser.
+  const [anonId] = useState<string | null>(() =>
+    typeof window === "undefined" ? null : getOrCreateAnonId(),
+  );
+
+  const upsertPlayer = useMutation(api.players.upsert);
+  const setPlayerName = useMutation(api.players.setName);
+  const startGame = useMutation(api.games.start);
+  const completeGame = useMutation(api.games.complete);
+
+  // Reactive read of the player row by anonId.
+  const player = useQuery(
+    api.players.getByAnonId,
+    anonId ? { anonId } : "skip",
+  );
+
+  // Ensure the player row exists. Fires once when anonId is known and
+  // there's no row yet.
+  const upsertedRef = useRef(false);
+  useEffect(() => {
+    if (!anonId) return;
+    if (player !== undefined) {
+      // Query has resolved (null = no row yet, object = exists).
+      if (player === null && !upsertedRef.current) {
+        upsertedRef.current = true;
+        upsertPlayer({ anonId }).catch(() => {
+          upsertedRef.current = false;
+        });
+      }
+    }
+  }, [anonId, player, upsertPlayer]);
+
+  const handleSubmitName = useCallback(
+    (name: string) => {
+      if (!player) return;
+      setPlayerName({ playerId: player._id, name });
+    },
+    [player, setPlayerName],
+  );
+  const handleSkipName = useCallback(
+    (memeName: string) => {
+      if (!player) return;
+      setPlayerName({ playerId: player._id, name: memeName });
+    },
+    [player, setPlayerName],
+  );
+
+  // ── Game record lifecycle ─────────────────────────────────────
+  // gameKey forces a fresh ArenaGame on rematch so all in-game state resets.
   const [gameKey, setGameKey] = useState(0);
+  const [gameId, setGameId] = useState<Id<"games"> | null>(null);
+  const startingRef = useRef(false);
+
+  // Open a games row once the player exists, has a name, and we don't
+  // already have a current gameId (or we just bumped gameKey for rematch).
+  useEffect(() => {
+    if (!player || !player.name) return;
+    if (gameId !== null) return;
+    if (startingRef.current) return;
+    startingRef.current = true;
+    startGame({
+      playerId: player._id,
+      agentId: agent.id,
+      agentDisplayName: agent.name,
+    })
+      .then((id) => setGameId(id))
+      .finally(() => {
+        startingRef.current = false;
+      });
+  }, [player, gameId, gameKey, startGame, agent.id, agent.name]);
+
   const onExit = () => router.push("/");
-  const onRematch = () => setGameKey((k) => k + 1);
+  const onRematch = () => {
+    setGameId(null);
+    setGameKey((k) => k + 1);
+  };
+
+  // Translate ArenaGame's UI-side winner into the persistence layer's
+  // human-perspective enum and forward to the mutation. Called once per
+  // game from inside ArenaGame when status flips.
+  const handleGameEnd = useCallback(
+    (status: Side | "draw", moves: number) => {
+      if (!gameId) return;
+      const winner: "human" | "agent" | "draw" =
+        status === "draw" ? "draw" : status === "red" ? "human" : "agent";
+      completeGame({ gameId, winner, moves }).catch(() => {
+        // Mutation is idempotent on the server side; swallowing here is
+        // safe — the user already sees the post-game card.
+      });
+    },
+    [gameId, completeGame],
+  );
+
+  // Show modal when player has loaded but hasn't picked a name yet.
+  const needsName = player && !player.name;
 
   return (
-    <ArenaGame
-      key={gameKey}
-      agent={agent}
-      boardStyle={boardStyle}
-      bs={bs}
-      onExit={onExit}
-      onRematch={onRematch}
-    />
+    <>
+      {needsName && (
+        <NamePromptModal
+          onSubmit={handleSubmitName}
+          onSkip={handleSkipName}
+          generateMemeName={generateMemeName}
+        />
+      )}
+      <ArenaGame
+        key={gameKey}
+        agent={agent}
+        boardStyle={boardStyle}
+        bs={bs}
+        onExit={onExit}
+        onRematch={onRematch}
+        onGameEnd={handleGameEnd}
+      />
+    </>
   );
 }
 
@@ -320,12 +428,14 @@ function ArenaGame({
   bs,
   onExit,
   onRematch,
+  onGameEnd,
 }: {
   agent: Agent;
   boardStyle: string;
   bs: BoardStyle;
   onExit: () => void;
   onRematch: () => void;
+  onGameEnd: (status: Side | "draw", moves: number) => void;
 }) {
   // Engine-authoritative game state.
   const [apiState, setApiState] = useState<StatePayload | null>(null);
@@ -355,6 +465,14 @@ function ArenaGame({
     ? rowsToBoard(apiState.rows)
     : Array.from({ length: 8 }, () => Array(8).fill(0) as BoardState[number]);
   const thinking = !!apiState && !status && (turn === "black" || pending);
+
+  // Persist the game outcome exactly once when status flips from null.
+  const reportedRef = useRef(false);
+  useEffect(() => {
+    if (!status || reportedRef.current) return;
+    reportedRef.current = true;
+    onGameEnd(status, history.length);
+  }, [status, history.length, onGameEnd]);
 
   // Apply an ApplyMove or AgentMove response, advancing all derived state.
   const applyResponse = useCallback(
