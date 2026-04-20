@@ -62,6 +62,10 @@ export const getByAnonId = query({
 // Top players with ≥1 completed game. Ordered by wins desc, then win rate
 // desc, then gamesPlayed desc, then recency. Small full-table scan — fine
 // while we're in the low-hundreds-of-players range; revisit if this grows.
+//
+// Projected to a public-safe shape: intentionally strips `_id` and `anonId`
+// so landing-page visitors can't harvest identifiers and then call write
+// mutations (setName, games.start) with a stolen playerId.
 export const topLeaderboard = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, { limit }) => {
@@ -75,6 +79,12 @@ export const topLeaderboard = query({
       if (b.gamesPlayed !== a.gamesPlayed) return b.gamesPlayed - a.gamesPlayed;
       return (b.lastPlayedAt ?? 0) - (a.lastPlayedAt ?? 0);
     });
-    return active.slice(0, limit ?? 10);
+    return active.slice(0, limit ?? 10).map((p) => ({
+      name: p.name ?? null,
+      wins: p.wins,
+      losses: p.losses,
+      draws: p.draws,
+      gamesPlayed: p.gamesPlayed,
+    }));
   },
 });

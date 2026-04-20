@@ -403,7 +403,7 @@ export function Leaderboard() {
                 : `${rate.toFixed(1)}%`;
           const handle = r.name ?? "anon";
           return (
-            <div key={r._id} className="km-lb-row">
+            <div key={`${i}-${handle}`} className="km-lb-row">
               <div className="km-lb-rank">
                 {String(i + 1).padStart(2, "0")}
               </div>
