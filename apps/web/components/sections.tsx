@@ -347,123 +347,84 @@ export function Roadmap() {
 
 // ── Leaderboard ────────────────────────────────────────────────
 export function Leaderboard() {
-  const rows = [
-    {
-      rank: 1,
-      name: "silent_queen",
-      elo: 2418,
-      wins: 89,
-      losses: 4,
-      streak: 12,
-      flag: "owner",
-    },
-    {
-      rank: 2,
-      name: "m. polotsky",
-      elo: 2377,
-      wins: 74,
-      losses: 9,
-      streak: 6,
-      flag: "gm",
-    },
-    {
-      rank: 3,
-      name: "threefold",
-      elo: 2301,
-      wins: 63,
-      losses: 11,
-      streak: 3,
-      flag: "",
-    },
-    {
-      rank: 4,
-      name: "h_king_me",
-      elo: 2244,
-      wins: 58,
-      losses: 13,
-      streak: 1,
-      flag: "",
-    },
-    {
-      rank: 5,
-      name: "double_jump",
-      elo: 2189,
-      wins: 51,
-      losses: 18,
-      streak: 0,
-      flag: "",
-    },
-    {
-      rank: 6,
-      name: "crown_seeker",
-      elo: 2140,
-      wins: 44,
-      losses: 20,
-      streak: 2,
-      flag: "",
-    },
-    {
-      rank: 7,
-      name: "not.a.bot",
-      elo: 2102,
-      wins: 40,
-      losses: 22,
-      streak: 0,
-      flag: "suspect",
-    },
-  ];
+  const rows = useQuery(api.players.topLeaderboard, { limit: 10 });
+  const loading = rows === undefined;
+  const empty = rows !== undefined && rows.length === 0;
+
   return (
     <section
       className="km-section km-leaderboard"
       data-screen-label="03 Leaderboard"
     >
       <SectionHead
-        kicker="leaderboard · this week"
-        title="The 3% who beat it."
-        sub="Tournaments are coming. For now, here are the humans who've won more than they've lost."
+        kicker="leaderboard"
+        title="Who's actually beaten him."
+        sub="Every human who's finished a game against sinza. The ones still at 0 wins are the evidence."
       />
       <div className="km-lb-wrap">
         <div className="km-lb-header">
           <div>#</div>
           <div>handle</div>
-          <div>elo</div>
+          <div>win%</div>
           <div>w</div>
           <div>l</div>
-          <div>streak</div>
+          <div>games</div>
         </div>
-        {rows.map((r) => (
-          <div key={r.name} className="km-lb-row">
-            <div className="km-lb-rank">{String(r.rank).padStart(2, "0")}</div>
-            <div className="km-lb-name">
-              {r.name}
-              {r.flag === "owner" && (
-                <span className="km-tag km-tag-owner">you?</span>
-              )}
-              {r.flag === "gm" && <span className="km-tag">gm</span>}
-              {r.flag === "suspect" && (
-                <span className="km-tag km-tag-warn">sus</span>
-              )}
-            </div>
-            <div className="km-lb-elo">{r.elo}</div>
-            <div>{r.wins}</div>
-            <div>{r.losses}</div>
-            <div>
-              {r.streak > 0 ? (
-                <span className="km-streak">🔥 {r.streak}</span>
-              ) : (
-                <span className="km-streak-0">—</span>
-              )}
-            </div>
+        {loading && (
+          <div className="km-lb-row">
+            <div className="km-lb-rank">—</div>
+            <div className="km-lb-name">loading…</div>
+            <div className="km-lb-elo">—</div>
+            <div>—</div>
+            <div>—</div>
+            <div>—</div>
           </div>
-        ))}
+        )}
+        {empty && (
+          <div className="km-lb-row">
+            <div className="km-lb-rank">01</div>
+            <div className="km-lb-name">nobody yet</div>
+            <div className="km-lb-elo">—</div>
+            <div>0</div>
+            <div>0</div>
+            <div>0</div>
+          </div>
+        )}
+        {rows?.map((r, i) => {
+          const rate = r.gamesPlayed > 0 ? (r.wins / r.gamesPlayed) * 100 : 0;
+          const rateLabel =
+            r.gamesPlayed === 0
+              ? "—"
+              : rate >= 10
+                ? `${rate.toFixed(0)}%`
+                : `${rate.toFixed(1)}%`;
+          const handle = r.name ?? "anon";
+          return (
+            <div key={`${i}-${handle}`} className="km-lb-row">
+              <div className="km-lb-rank">
+                {String(i + 1).padStart(2, "0")}
+              </div>
+              <div className="km-lb-name">{handle}</div>
+              <div className="km-lb-elo">{rateLabel}</div>
+              <div>{r.wins}</div>
+              <div>{r.losses}</div>
+              <div>{r.gamesPlayed}</div>
+            </div>
+          );
+        })}
       </div>
       <div className="km-lb-foot">
         <span className="km-lb-note">
           entry is automatic. there is no signup to lose.
         </span>
-        <button className="km-btn km-btn-ghost km-btn-sm">
-          see full board →
-        </button>
+        {empty && (
+          <Link
+            className="km-btn km-btn-primary km-btn-sm"
+            href="/sinza"
+          >
+            be the first →
+          </Link>
+        )}
       </div>
     </section>
   );
