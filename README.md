@@ -12,6 +12,12 @@ The goal is simple:
 
 This repo is where the product gets assembled. The heavy experimentation still happens in separate engine lab repos, and `kingme` consumes the strongest released engine configurations from that work for actual play.
 
+## What Powers Sinza Today
+
+`sinza` is currently served through our Python engine API and runs on a tuned alpha-beta search engine.
+
+We also keep a separate research/training stack where we experiment with self-play, neural guidance, and future checkpoint-backed agents. That research path has not been promoted into production yet.
+
 Today that means:
 
 - the web app will be the player-facing experience
