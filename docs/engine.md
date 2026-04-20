@@ -17,6 +17,23 @@ The training repo remains the lab where we:
 
 This repo owns the serving runtime that turns a released agent into a playable product bot.
 
+## Current Checkers Ruleset
+
+The live checkers runtime now targets the local Tanzanian-style 8x8 rules instead of English checkers.
+
+That means:
+
+- men move forward diagonally by one square
+- men capture forward only
+- captures are mandatory
+- kings are flying kings
+- kings can move diagonally across multiple empty squares
+- kings can capture from distance and choose any empty landing square beyond the captured piece
+
+The code for that lives in:
+
+- `apps/engine-api/src/kingme_engine_api/runtime/checkers_v2/`
+
 ## Split Between Repos
 
 ### Training repo

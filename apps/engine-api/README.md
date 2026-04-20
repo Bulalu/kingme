@@ -71,6 +71,20 @@ and sets:
 
 That means the first deployed version is ready to serve the built-in alpha-beta agents immediately.
 
+## Current Ruleset
+
+The serving engine now follows the local Tanzanian-style 8x8 draughts variant:
+
+- men move forward diagonally one square
+- men capture forward only
+- captures are mandatory
+- kings are flying kings and can move diagonally across any number of empty squares
+- kings can capture from distance and land on any empty square beyond the captured piece
+
+This rules logic lives in:
+
+- `apps/engine-api/src/kingme_engine_api/runtime/checkers_v2/`
+
 ## Keeping Modal Warm
 
 The live engine API is configured to stay warm on Modal:

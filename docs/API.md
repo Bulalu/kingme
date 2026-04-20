@@ -38,6 +38,18 @@ Clients should not hardcode search internals beyond what the API returns. Treat 
 3. Clients should preserve and round-trip the full `state` payload exactly as returned.
 4. Clients should send PDN move strings returned by the API, not invent their own move encoding.
 
+## Current Ruleset Notes
+
+The live engine currently serves the Tanzanian-style 8x8 variant used by the product team:
+
+- men move forward diagonally one square
+- men capture forward only
+- captures are mandatory
+- kings are flying kings and can travel multiple empty diagonal squares
+- kings can capture from distance and may land on any empty square beyond the captured piece
+
+Frontend code should treat all legality and landing-square generation as engine-owned behavior.
+
 ## Data Models
 
 ### `StatePayload`
