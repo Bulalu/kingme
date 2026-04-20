@@ -51,7 +51,7 @@ const AGENTS: Record<string, Agent> = {
     id: "sinza",
     name: "SINZA",
     tagline: "the showman",
-    venue: "SINZA SOCIAL HALL",
+    venue: "SINZA KIJIWENI",
     img: "/assets/sinza.png",
   },
   manzese: {
