@@ -35,10 +35,18 @@ export const upsert = mutation({
   },
 });
 
+// Keyed on anonId rather than playerId so a malicious client can't use a
+// scraped/guessed playerId to rename someone else's entry. Server looks up
+// the player from the caller's own anonId (held in localStorage).
 export const setName = mutation({
-  args: { playerId: v.id("players"), name: v.string() },
-  handler: async (ctx, { playerId, name }) => {
-    await ctx.db.patch(playerId, { name });
+  args: { anonId: v.string(), name: v.string() },
+  handler: async (ctx, { anonId, name }) => {
+    const player = await ctx.db
+      .query("players")
+      .withIndex("by_anonId", (q) => q.eq("anonId", anonId))
+      .unique();
+    if (!player) throw new Error("player not found");
+    await ctx.db.patch(player._id, { name });
   },
 });
 
