@@ -9,6 +9,7 @@
  */
 
 import type * as agents from "../agents.js";
+import type * as crons from "../crons.js";
 import type * as games from "../games.js";
 import type * as players from "../players.js";
 
@@ -20,6 +21,7 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   agents: typeof agents;
+  crons: typeof crons;
   games: typeof games;
   players: typeof players;
 }>;

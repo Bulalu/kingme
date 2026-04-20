@@ -375,7 +375,30 @@ export default function Arena({
       });
   }, [player, gameId, gameKey, startGame, agent.id, agent.name]);
 
-  const onExit = () => router.push("/");
+  // Plain navigation — no forfeit. Used when the game is already in a
+  // terminal state (PostGame screen) where handleGameEnd has written or
+  // is about to write the real winner. If we forfeited here too, an
+  // in-flight human-win or draw could be overtaken by the agent-win and
+  // the idempotency guard would preserve the wrong result.
+  const onExit = useCallback(() => {
+    router.push("/");
+  }, [router]);
+
+  // Mid-game exit from the top bar. Mark the game as an agent forfeit
+  // before navigating.
+  const onForfeitAndExit = useCallback(
+    (movesPlayed: number) => {
+      if (gameId) {
+        completeGame({ gameId, winner: "agent", moves: movesPlayed }).catch(
+          () => {
+            // Idempotent on the server — swallow and navigate.
+          },
+        );
+      }
+      router.push("/");
+    },
+    [gameId, completeGame, router],
+  );
   const onRematch = () => {
     setGameId(null);
     setGameKey((k) => k + 1);
@@ -415,6 +438,7 @@ export default function Arena({
         boardStyle={boardStyle}
         bs={bs}
         onExit={onExit}
+        onForfeitAndExit={onForfeitAndExit}
         onRematch={onRematch}
         onGameEnd={handleGameEnd}
       />
@@ -427,6 +451,7 @@ function ArenaGame({
   boardStyle,
   bs,
   onExit,
+  onForfeitAndExit,
   onRematch,
   onGameEnd,
 }: {
@@ -434,6 +459,7 @@ function ArenaGame({
   boardStyle: string;
   bs: BoardStyle;
   onExit: () => void;
+  onForfeitAndExit: (moves: number) => void;
   onRematch: () => void;
   onGameEnd: (status: Side | "draw", moves: number) => void;
 }) {
@@ -733,7 +759,12 @@ function ArenaGame({
     >
       {/* top bar */}
       <div className="ar-bar">
-        <button className="ar-bar-exit" onClick={onExit}>
+        <button
+          className="ar-bar-exit"
+          onClick={() =>
+            status ? onExit() : onForfeitAndExit(history.length)
+          }
+        >
           ← leave
         </button>
         <div className="ar-bar-venue">
