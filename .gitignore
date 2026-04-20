@@ -24,6 +24,9 @@ __pycache__/
 
 convex/.generated/
 
+# Vercel CLI — per-developer link metadata
+.vercel/
+
 # Local engine artifacts
 *.pt
 *.pth
