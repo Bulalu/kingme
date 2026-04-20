@@ -5,6 +5,7 @@
 // component round-trips the full StatePayload exactly and only renders.
 
 import { useCallback, useEffect, useRef, useState } from "react";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
@@ -52,14 +53,14 @@ const AGENTS: Record<string, Agent> = {
     name: "SINZA",
     tagline: "the showman",
     venue: "SINZA KIJIWENI",
-    img: "/assets/sinza.png",
+    img: "/assets/sinza.webp",
   },
   manzese: {
     id: "manzese",
     name: "MZE MANZESE",
     tagline: "the old man",
     venue: "MANZESE BACK OFFICE",
-    img: "/assets/manzese.png",
+    img: "/assets/manzese.webp",
   },
 };
 
@@ -128,8 +129,7 @@ function PlayerCard({
     >
       {agent ? (
         <div className="ar-pc-avatar">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img src={agent.img} alt={name} />
+          <Image src={agent.img} alt={name} fill sizes="56px" />
           {active && (
             <div
               className="ar-pc-thinking-bubble"
