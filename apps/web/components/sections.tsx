@@ -382,6 +382,7 @@ export function Leaderboard() {
           <div>win%</div>
           <div>w</div>
           <div>l</div>
+          <div>d</div>
           <div>games</div>
         </div>
         {loading && (
@@ -389,6 +390,7 @@ export function Leaderboard() {
             <div className="km-lb-rank">—</div>
             <div className="km-lb-name">loading…</div>
             <div className="km-lb-elo">—</div>
+            <div>—</div>
             <div>—</div>
             <div>—</div>
             <div>—</div>
@@ -402,30 +404,43 @@ export function Leaderboard() {
             <div>0</div>
             <div>0</div>
             <div>0</div>
+            <div>0</div>
           </div>
         )}
-        {rows?.map((r, i) => {
-          const rate = r.gamesPlayed > 0 ? (r.wins / r.gamesPlayed) * 100 : 0;
-          const rateLabel =
-            r.gamesPlayed === 0
-              ? "—"
-              : rate >= 10
-                ? `${rate.toFixed(0)}%`
-                : `${rate.toFixed(1)}%`;
-          const handle = r.name ?? "anon";
-          return (
-            <div key={`${i}-${handle}`} className="km-lb-row">
-              <div className="km-lb-rank">
-                {String(i + 1).padStart(2, "0")}
+        {(() => {
+          const maxWins = rows?.reduce((m, r) => Math.max(m, r.wins), 0) ?? 0;
+          return rows?.map((r, i) => {
+            const rate = r.gamesPlayed > 0 ? (r.wins / r.gamesPlayed) * 100 : 0;
+            const rateLabel =
+              r.gamesPlayed === 0
+                ? "—"
+                : rate >= 10
+                  ? `${rate.toFixed(0)}%`
+                  : `${rate.toFixed(1)}%`;
+            const handle = r.name ?? "anon";
+            const isTop = maxWins > 0 && r.wins === maxWins;
+            return (
+              <div key={`${i}-${handle}`} className="km-lb-row">
+                <div className="km-lb-rank">
+                  {String(i + 1).padStart(2, "0")}
+                </div>
+                <div className="km-lb-name">
+                  {handle}
+                  {isTop && (
+                    <span aria-label="most wins" title="most wins">
+                      🔥
+                    </span>
+                  )}
+                </div>
+                <div className="km-lb-elo">{rateLabel}</div>
+                <div>{r.wins}</div>
+                <div>{r.losses}</div>
+                <div>{r.draws}</div>
+                <div>{r.gamesPlayed}</div>
               </div>
-              <div className="km-lb-name">{handle}</div>
-              <div className="km-lb-elo">{rateLabel}</div>
-              <div>{r.wins}</div>
-              <div>{r.losses}</div>
-              <div>{r.gamesPlayed}</div>
-            </div>
-          );
-        })}
+            );
+          });
+        })()}
       </div>
       <div className="km-lb-foot">
         <span className="km-lb-note">

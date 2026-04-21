@@ -930,7 +930,7 @@ button { font: inherit; cursor: pointer; border: 0; background: transparent; col
 }
 .km-lb-header, .km-lb-row {
   display: grid;
-  grid-template-columns: 60px 1fr 80px 60px 60px 100px;
+  grid-template-columns: 60px 1fr 80px 60px 60px 60px 100px;
   gap: 20px;
   padding: 18px 28px;
   align-items: center;
@@ -1448,7 +1448,7 @@ button { font: inherit; cursor: pointer; border: 0; background: transparent; col
      on the handle column to truncate with ellipsis. */
   .km-lb-header,
   .km-lb-row {
-    grid-template-columns: 28px minmax(0, 1fr) 52px 28px 28px 40px;
+    grid-template-columns: 28px minmax(0, 1fr) 52px 24px 24px 24px 36px;
     gap: 8px;
     padding: 12px 10px;
     font-size: 11px;
