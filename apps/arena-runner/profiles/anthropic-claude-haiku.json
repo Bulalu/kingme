@@ -1,0 +1,12 @@
+{
+  "profileId": "anthropic-claude-haiku-checkers-v1",
+  "displayName": "claude-haiku-4.5",
+  "provider": "openrouter",
+  "model": "anthropic/claude-haiku-4.5",
+  "promptVersion": "checkers-move-selection-v1",
+  "temperature": 0,
+  "maxOutputTokens": 64,
+  "timeoutMs": 30000,
+  "gameKey": "checkers",
+  "variantKey": "tanzanian-8x8"
+}

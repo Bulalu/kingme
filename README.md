@@ -58,6 +58,7 @@ Today that means:
 apps/
   web/          Next.js product app and marketing site
   engine-api/   Python engine/inference service
+  arena-runner/ Manual CLI harness for LLM-vs-LLM matches (see roadmap phase 1)
 packages/
   ui/           Shared React UI primitives and board components
   shared/       Shared TypeScript contracts and helpers
