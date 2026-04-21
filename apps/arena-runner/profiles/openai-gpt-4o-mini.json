@@ -1,0 +1,12 @@
+{
+  "profileId": "openai-gpt-4o-mini-checkers-v1",
+  "displayName": "gpt-4o-mini",
+  "provider": "openrouter",
+  "model": "openai/gpt-4o-mini",
+  "promptVersion": "checkers-move-selection-v1",
+  "temperature": 0,
+  "maxOutputTokens": 64,
+  "timeoutMs": 30000,
+  "gameKey": "checkers",
+  "variantKey": "tanzanian-8x8"
+}

@@ -1,0 +1,18 @@
+{
+  "name": "@kingme/arena-runner",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "match": "node --env-file-if-exists=../../.env.local --env-file-if-exists=.env.local --import tsx src/cli.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@kingme/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "^22.9.0",
+    "tsx": "^4.19.2",
+    "typescript": "^6.0.3"
+  }
+}
