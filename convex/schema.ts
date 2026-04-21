@@ -1,5 +1,16 @@
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
+import {
+  arenaGameKey,
+  arenaMatchStatus,
+  arenaParticipant,
+  arenaTerminationReason,
+  arenaVariantKey,
+  arenaVisibility,
+  arenaWinner,
+  engineColor,
+  engineState,
+} from "./arenaValidators";
 
 // Records of who's playing on kingme.dev and what they've played against the
 // public agents. There's no real auth — `anonId` is a UUID stored in the
@@ -10,67 +21,10 @@ import { v } from "convex/values";
 // landing page and arena top bar can read live stats with one cheap row
 // fetch instead of scanning the games table on every render.
 
-// ── LLM arena validators ───────────────────────────────────────
-//
-// Mirrors packages/shared/src/arena.ts and engine.ts. If those change,
-// update this block in the same PR. These tables persist manual
-// model-vs-model matches per the llm-arena-roadmap; they are NOT wired
-// to any public surface — only the runner and (later) admin-only views
-// read/write them.
-
-const engineColor = v.union(v.literal("red"), v.literal("white"));
-
-const engineState = v.object({
-  rows: v.array(v.string()),
-  side_to_move: engineColor,
-  forced_square: v.union(v.number(), v.null()),
-  pending_captures: v.array(v.number()),
-  no_progress_count: v.number(),
-  repetition_counts: v.array(
-    v.object({
-      board: v.array(v.number()),
-      side_to_move: engineColor,
-      count: v.number(),
-    }),
-  ),
-});
-
-// Snapshot of a profile captured onto the match record at start time so a
-// completed match still describes its original participants even if the
-// source profile is later edited.
-const arenaParticipant = v.object({
-  profileId: v.string(),
-  displayName: v.string(),
-  provider: v.literal("openrouter"),
-  model: v.string(),
-  promptVersion: v.string(),
-  temperature: v.number(),
-  maxOutputTokens: v.number(),
-  timeoutMs: v.number(),
-});
-
-const arenaMatchStatus = v.union(
-  v.literal("pending"),
-  v.literal("running"),
-  v.literal("completed"),
-  v.literal("failed"),
-  v.literal("aborted"),
-);
-
-const arenaTerminationReason = v.union(
-  v.literal("normal"),
-  v.literal("max_plies"),
-  v.literal("protocol_violation"),
-  v.literal("provider_timeout"),
-  v.literal("provider_error"),
-  v.literal("runner_error"),
-  v.literal("cancelled"),
-);
-
-const arenaWinner = v.union(engineColor, v.literal("draw"), v.null());
-
-const arenaGameKey = v.literal("checkers");
-const arenaVariantKey = v.literal("tanzanian-8x8");
+// LLM arena tables persist manual model-vs-model matches per the
+// llm-arena-roadmap; they are NOT wired to any public surface — only
+// the runner and (later) admin-only views read/write them. Validators
+// live in ./arenaValidators so function files can import them too.
 
 export default defineSchema({
   players: defineTable({
@@ -153,7 +107,7 @@ export default defineSchema({
     engineBaseUrl: v.string(),
     engineVersion: v.union(v.string(), v.null()),
     errorSummary: v.union(v.string(), v.null()),
-    visibility: v.union(v.literal("private"), v.literal("public")),
+    visibility: arenaVisibility,
   })
     .index("by_matchId", ["matchId"])
     .index("by_status_requestedAt", ["status", "requestedAt"])
