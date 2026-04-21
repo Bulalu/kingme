@@ -352,9 +352,11 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
     plies,
   };
 
-  await mkdir(dirname(transcriptPath), { recursive: true });
-  await writeFile(transcriptPath, JSON.stringify(transcript, null, 2), "utf8");
-
+  // Finalize Convex before writing the transcript. If writeFile throws
+  // (invalid --out path, permission error, disk full) the error still
+  // bubbles to the caller, but the Convex match does not get stuck in
+  // `running` with orphan plies. Local transcript is supplementary; the
+  // persisted terminal state is what downstream tooling will read.
   if (persistence) {
     try {
       await persistence.finalize({
@@ -369,6 +371,9 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
       persistLog("finalize", err);
     }
   }
+
+  await mkdir(dirname(transcriptPath), { recursive: true });
+  await writeFile(transcriptPath, JSON.stringify(transcript, null, 2), "utf8");
 
   log(
     `match ${matchId} ${status} (${terminationReason}) after ${plies.length} plies; transcript: ${transcriptPath}`,
