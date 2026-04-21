@@ -1,3 +1,4 @@
+import { paginationOptsValidator } from "convex/server";
 import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import { query } from "./_generated/server";
@@ -40,11 +41,15 @@ function toPublicPly(p: ArenaPlyDoc) {
 
 // Newest-first, public matches only. `limit` caps at 50 to keep list
 // pages cheap; richer pagination can come once there are enough
-// matches to warrant it.
+// matches to warrant it. The integer/finite guard defends against a
+// misbehaving caller passing NaN/Infinity/1.5 — `.take()` would
+// otherwise error at runtime on this public endpoint.
 export const listRecent = query({
   args: { limit: v.optional(v.number()) },
   handler: async (ctx, { limit }) => {
-    const take = Math.min(Math.max(limit ?? 25, 1), 50);
+    const raw = limit ?? 25;
+    const normalized = Number.isFinite(raw) ? Math.floor(raw) : 25;
+    const take = Math.min(Math.max(normalized, 1), 50);
     const matches = await ctx.db
       .query("arenaMatches")
       .withIndex("by_visibility_requestedAt", (q) => q.eq("visibility", "public"))
@@ -69,21 +74,29 @@ export const getMatch = query({
   },
 });
 
-// Ordered plies for a public match; empty array for missing/private
-// matches so client code can render "no plies yet" uniformly.
+// Ordered plies for a public match. Paginated so a long match (the
+// runner accepts any positive --max-plies) cannot exceed per-query
+// row/size limits. Callers pass standard Convex pagination opts; an
+// empty page with isDone=true is returned for missing/private matches
+// so client code can render uniformly without branching on null.
 export const listPlies = query({
-  args: { matchId: v.string() },
-  handler: async (ctx, { matchId }) => {
+  args: {
+    matchId: v.string(),
+    paginationOpts: paginationOptsValidator,
+  },
+  handler: async (ctx, { matchId, paginationOpts }) => {
     const match = await ctx.db
       .query("arenaMatches")
       .withIndex("by_matchId", (q) => q.eq("matchId", matchId))
       .unique();
-    if (!match || match.visibility !== "public") return [];
-    const plies = await ctx.db
+    if (!match || match.visibility !== "public") {
+      return { page: [], isDone: true, continueCursor: "" };
+    }
+    const result = await ctx.db
       .query("arenaPlies")
       .withIndex("by_match_ply", (q) => q.eq("matchId", matchId))
       .order("asc")
-      .collect();
-    return plies.map(toPublicPly);
+      .paginate(paginationOpts);
+    return { ...result, page: result.page.map(toPublicPly) };
   },
 });
