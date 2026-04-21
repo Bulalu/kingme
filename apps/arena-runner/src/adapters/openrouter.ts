@@ -34,6 +34,17 @@ export class OpenRouterProtocolError extends Error {
   }
 }
 
+// Transport-layer failure: DNS, TLS, connection reset, offline. fetch()
+// throws these as TypeError instead of returning an HTTP response, so
+// they'd otherwise skip the provider retry gate in runner.ts and get
+// misclassified as a runner bug.
+export class OpenRouterNetworkError extends Error {
+  constructor(message: string, public readonly cause: Error) {
+    super(`openrouter transport: ${message}`);
+    this.name = "OpenRouterNetworkError";
+  }
+}
+
 interface ChatCompletionResponse {
   id?: string;
   choices: Array<{
@@ -100,26 +111,39 @@ export function createOpenRouterAdapter(
       const started = performance.now();
 
       try {
-        const res = await fetch(`${base}/chat/completions`, {
-          method: "POST",
-          signal: controller.signal,
-          headers: {
-            "content-type": "application/json",
-            authorization: `Bearer ${config.apiKey}`,
-            ...(config.httpReferer ? { "http-referer": config.httpReferer } : {}),
-            ...(config.appTitle ? { "x-title": config.appTitle } : {}),
-          },
-          body: JSON.stringify({
-            model: input.profile.model,
-            temperature: input.profile.temperature,
-            max_tokens: input.profile.maxOutputTokens,
-            messages,
-            response_format: {
-              type: "json_schema",
-              json_schema: arenaMoveOutputJsonSchema,
+        let res: Response;
+        try {
+          res = await fetch(`${base}/chat/completions`, {
+            method: "POST",
+            signal: controller.signal,
+            headers: {
+              "content-type": "application/json",
+              authorization: `Bearer ${config.apiKey}`,
+              ...(config.httpReferer ? { "http-referer": config.httpReferer } : {}),
+              ...(config.appTitle ? { "x-title": config.appTitle } : {}),
             },
-          }),
-        });
+            body: JSON.stringify({
+              model: input.profile.model,
+              temperature: input.profile.temperature,
+              max_tokens: input.profile.maxOutputTokens,
+              messages,
+              response_format: {
+                type: "json_schema",
+                json_schema: arenaMoveOutputJsonSchema,
+              },
+            }),
+          });
+        } catch (err) {
+          // AbortError from the timeout controller propagates untouched so
+          // runner.ts maps it to `provider_timeout`. Every other throw from
+          // fetch is a transport failure (DNS, TLS, connection reset,
+          // offline) and must go through the provider retry gate.
+          if (err instanceof Error && err.name === "AbortError") throw err;
+          throw new OpenRouterNetworkError(
+            err instanceof Error ? err.message : String(err),
+            err instanceof Error ? err : new Error(String(err)),
+          );
+        }
 
         const latencyMs = Math.round(performance.now() - started);
 

@@ -28,6 +28,7 @@ import type { EngineClient } from "./engineClient.js";
 import { EngineError } from "./engineClient.js";
 import {
   OpenRouterError,
+  OpenRouterNetworkError,
   OpenRouterProtocolError,
 } from "./adapters/openrouter.js";
 
@@ -102,7 +103,11 @@ async function selectWithRetry(
         log(`  repair attempt ${repairAttempts}: ${err.message}`);
         continue;
       }
-      if (err instanceof OpenRouterError || isAbortError(err)) {
+      if (
+        err instanceof OpenRouterError ||
+        err instanceof OpenRouterNetworkError ||
+        isAbortError(err)
+      ) {
         if (providerAttempts >= ARENA_MAX_PROVIDER_RETRIES) {
           throw err;
         }
@@ -141,7 +146,7 @@ function classifyFailure(err: unknown): {
       summary: (err as Error).message,
     };
   }
-  if (err instanceof OpenRouterError) {
+  if (err instanceof OpenRouterError || err instanceof OpenRouterNetworkError) {
     return {
       status: "aborted",
       reason: "provider_error",
