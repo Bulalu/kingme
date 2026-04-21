@@ -27,6 +27,22 @@ export function loadEnv(): RunnerEnv {
   };
 }
 
+export interface PersistEnv {
+  convexUrl: string;
+  adminSecret: string;
+}
+
+export function loadPersistEnv(): PersistEnv {
+  const convexUrl = process.env.CONVEX_URL;
+  const adminSecret = process.env.ARENA_ADMIN_SECRET;
+  if (!convexUrl || !adminSecret) {
+    throw new Error(
+      "--persist requires CONVEX_URL and ARENA_ADMIN_SECRET. Set them in .env.local. Run `npx convex env set ARENA_ADMIN_SECRET <value>` on the deployment too.",
+    );
+  }
+  return { convexUrl, adminSecret };
+}
+
 // Minimal profile shape expected on disk. Missing fields get sensible
 // defaults so profile JSON files stay small.
 interface ProfileFile {

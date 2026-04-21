@@ -31,6 +31,7 @@ import {
   OpenRouterNetworkError,
   OpenRouterProtocolError,
 } from "./adapters/openrouter.js";
+import type { ArenaPersistence } from "./persistence.js";
 
 export interface RunMatchOptions {
   engine: EngineClient;
@@ -41,6 +42,8 @@ export interface RunMatchOptions {
   maxPlies?: number;
   onPly?: (ply: ArenaPly) => void;
   log?: (message: string) => void;
+  persistence?: ArenaPersistence;
+  requestedBy?: string;
 }
 
 export interface MatchResult {
@@ -193,6 +196,38 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
   let terminationReason: ArenaTerminationReason = "normal";
   let errorSummary: string | null = null;
 
+  // Persistence is best-effort: on the first failure, log and null it
+  // out so the rest of the match still completes with a local
+  // transcript. A broken Convex should not take down an otherwise
+  // valid local run.
+  let persistence: ArenaPersistence | undefined = opts.persistence;
+  const persistLog = (op: string, err: unknown) => {
+    const msg = err instanceof Error ? err.message : String(err);
+    log(`  persistence (${op}) failed, disabling: ${msg}`);
+    persistence = undefined;
+  };
+
+  if (persistence) {
+    try {
+      await persistence.create({
+        matchId,
+        gameKey: opts.redProfile.gameKey,
+        variantKey: opts.redProfile.variantKey,
+        requestedBy: opts.requestedBy ?? "cli",
+        redProfileId: opts.redProfile.profileId,
+        whiteProfileId: opts.whiteProfile.profileId,
+        redParticipant: redSnapshot,
+        whiteParticipant: whiteSnapshot,
+        initialState,
+        engineBaseUrl: opts.engine.baseUrl,
+      });
+      await persistence.claim(matchId);
+      log(`  persistence: match row created and claimed`);
+    } catch (err) {
+      persistLog("create/claim", err);
+    }
+  }
+
   try {
     while (winner === null && plies.length < maxPlies) {
       const sideToMove = state.side_to_move;
@@ -255,6 +290,27 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
       moveHistory.push(applied.applied_move.pdn);
       opts.onPly?.(ply);
 
+      if (persistence) {
+        try {
+          await persistence.appendPly({
+            matchId,
+            plyIndex: ply.plyIndex,
+            side: ply.side,
+            profileId: ply.profileId,
+            movePdn: ply.movePdn,
+            legalMoves: ply.legalMoves,
+            stateBefore: ply.stateBefore,
+            stateAfter: ply.stateAfter,
+            latencyMs: ply.latencyMs,
+            providerRequestId: ply.providerRequestId,
+            rawOutput: ply.rawOutput,
+            usage: ply.usage,
+          });
+        } catch (err) {
+          persistLog("appendPly", err);
+        }
+      }
+
       log(`  -> ${applied.applied_move.pdn} (${selection.latencyMs}ms)`);
     }
 
@@ -298,6 +354,21 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
 
   await mkdir(dirname(transcriptPath), { recursive: true });
   await writeFile(transcriptPath, JSON.stringify(transcript, null, 2), "utf8");
+
+  if (persistence) {
+    try {
+      await persistence.finalize({
+        matchId,
+        status: status as "completed" | "failed" | "aborted",
+        winner,
+        terminationReason,
+        errorSummary: errorSummary ?? undefined,
+      });
+      log(`  persistence: match finalized as ${status} (${terminationReason})`);
+    } catch (err) {
+      persistLog("finalize", err);
+    }
+  }
 
   log(
     `match ${matchId} ${status} (${terminationReason}) after ${plies.length} plies; transcript: ${transcriptPath}`,

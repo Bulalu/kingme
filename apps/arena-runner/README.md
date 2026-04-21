@@ -41,6 +41,13 @@ Flags:
 - `--white <path>` — profile JSON for the white (bottom) side. **Required.**
 - `--max-plies <N>` — hard ply cap (default 300).
 - `--out <path>` — transcript path (default `transcripts/<matchId>.json`).
+- `--persist` — also write the match + plies to Convex via the admin
+  wrappers. Requires `CONVEX_URL` and `ARENA_ADMIN_SECRET` in the env,
+  and the same secret set on the deployment via
+  `npx convex env set ARENA_ADMIN_SECRET <value>`. Persistence is
+  best-effort: the first Convex error logs and disables further
+  writes for that match, so a broken Convex cannot kill an otherwise
+  valid local run. The JSON transcript is always written.
 
 Engine colors `red` and `white` match the Python engine API exactly. The
 web UI's red/black mapping is a view-layer concern and does not apply
