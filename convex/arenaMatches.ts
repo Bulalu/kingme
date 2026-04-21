@@ -1,5 +1,5 @@
 import { v } from "convex/values";
-import { mutation, query } from "./_generated/server";
+import { internalMutation, internalQuery } from "./_generated/server";
 import {
   arenaGameKey,
   arenaParticipant,
@@ -8,17 +8,18 @@ import {
   engineState,
 } from "./arenaValidators";
 
-// Arena match CRUD. These are admin-only workflows per
-// docs/llm-arena-roadmap.md — the runner creates matches via CLI, and
-// (later) admin pages will read them. There is no public surface that
-// triggers matches today. Phase 5 will add an explicit auth gate; until
-// then the practical safety is that no web code references this module.
+// Arena match CRUD. Admin-only per docs/llm-arena-roadmap.md: exported
+// as `internalMutation`/`internalQuery` so they are NOT reachable from
+// the public Convex client. The runner will call them in step 4 via
+// `ConvexHttpClient` configured with a deploy key (Convex's built-in
+// admin credential); a future admin UI would wrap these in public
+// mutations/queries that gate on `ctx.auth.getUserIdentity()`.
 
 // Create a new match row in `pending` state. The runner supplies the
 // external matchId (a UUID) so transcripts on disk and rows in Convex
 // share the same public handle. Idempotent on matchId: calling twice
 // with the same matchId is rejected so a runner retry can't double-seed.
-export const create = mutation({
+export const create = internalMutation({
   args: {
     matchId: v.string(),
     gameKey: arenaGameKey,
@@ -71,7 +72,7 @@ export const create = mutation({
 
 // Look up a match by its external matchId. Returns null when not found
 // so admin UIs can render a 404 without catching exceptions.
-export const getByMatchId = query({
+export const getByMatchId = internalQuery({
   args: { matchId: v.string() },
   handler: async (ctx, { matchId }) => {
     return await ctx.db
@@ -85,7 +86,7 @@ export const getByMatchId = query({
 // cheap; pagination comes later with a cursor-based variant if needed.
 // `visibility` filters to public rows for (future) public listings; when
 // omitted, all rows are returned — admin default.
-export const listRecent = query({
+export const listRecent = internalQuery({
   args: {
     limit: v.optional(v.number()),
     visibility: v.optional(arenaVisibility),
