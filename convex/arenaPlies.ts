@@ -51,6 +51,16 @@ export const append = internalMutation({
         `ply index mismatch for ${args.matchId}: expected ${match.totalPlies}, got ${args.plyIndex}`,
       );
     }
+    // Defence against a stale runner that happens to have the right
+    // plyIndex but a divergent view of the board — without this, the
+    // persisted ply chain can no longer be replayed from the match's
+    // authoritative state. Both sides were produced by the same schema
+    // validator and are plain JSON, so stringify comparison is safe.
+    if (JSON.stringify(args.stateBefore) !== JSON.stringify(match.currentState)) {
+      throw new Error(
+        `stateBefore diverges from currentState for ${args.matchId} ply ${args.plyIndex}`,
+      );
+    }
 
     const plyId = await ctx.db.insert("arenaPlies", {
       matchId: args.matchId,
