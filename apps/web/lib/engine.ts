@@ -27,88 +27,36 @@ import {
   type Side,
 } from "./checkers";
 
+// Canonical engine payload types live in @kingme/shared and mirror the
+// Python schemas in apps/engine-api/src/kingme_engine_api/schemas.py.
+// Re-exported here so existing imports from "@/lib/engine" keep working.
+export type {
+  AgentMoveResponse,
+  AgentSummary,
+  ApiColor,
+  ApiWinner,
+  ApplyMoveResponse,
+  LegalMovesResponse,
+  MovePayload,
+  PlayTurnResponse,
+  RepetitionCount,
+  SearchPayload,
+  StatePayload,
+} from "@kingme/shared/engine";
+import type {
+  AgentMoveResponse,
+  ApiColor,
+  ApiWinner,
+  ApplyMoveResponse,
+  LegalMovesResponse,
+  MovePayload,
+  PlayTurnResponse,
+  StatePayload,
+} from "@kingme/shared/engine";
+
 const ENGINE_BASE =
   process.env.NEXT_PUBLIC_ENGINE_BASE_URL ??
   "https://ctrlx--kingme-engine-api.modal.run";
-
-// ── Types (mirror docs/API.md) ─────────────────────────────────
-
-export type ApiColor = "red" | "white";
-
-export interface RepetitionCount {
-  board: number[];
-  side_to_move: ApiColor;
-  count: number;
-}
-
-export interface StatePayload {
-  rows: string[];
-  side_to_move: ApiColor;
-  forced_square: number | null;
-  no_progress_count: number;
-  repetition_counts: RepetitionCount[];
-}
-
-export interface MovePayload {
-  pdn: string;
-  actions: number[];
-  path: number[];
-  is_capture: boolean;
-  capture_count: number;
-  promotes: boolean;
-  final_square: number;
-}
-
-export interface AgentSummary {
-  id: string;
-  display_name: string;
-  description: string;
-  engine: string;
-  depth: number;
-  ready: boolean;
-  public: boolean;
-}
-
-export interface SearchPayload {
-  score: number;
-  depth: number;
-  nodes: number;
-  principal_variation: string[];
-}
-
-export type ApiWinner = ApiColor | "draw" | null;
-
-export interface LegalMovesResponse {
-  state: StatePayload;
-  legal_moves: MovePayload[];
-  winner: ApiWinner;
-}
-
-export interface ApplyMoveResponse {
-  applied_move: MovePayload;
-  state: StatePayload;
-  legal_moves: MovePayload[];
-  winner: ApiWinner;
-}
-
-export interface AgentMoveResponse {
-  agent: AgentSummary;
-  move: MovePayload;
-  state: StatePayload;
-  legal_moves: MovePayload[];
-  winner: ApiWinner;
-  search?: SearchPayload;
-}
-
-export interface PlayTurnResponse {
-  applied_move: MovePayload;
-  agent: AgentSummary | null;
-  agent_move: MovePayload | null;
-  state: StatePayload;
-  legal_moves: MovePayload[];
-  winner: ApiWinner;
-  search?: SearchPayload | null;
-}
 
 // ── Fetch wrappers ─────────────────────────────────────────────
 

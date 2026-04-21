@@ -108,6 +108,7 @@ You only need this if you're changing engine behaviour. See [apps/engine-api/REA
 - [docs/architecture.md](docs/architecture.md) — overall repo split and rollout order
 - [docs/engine.md](docs/engine.md) — how the serving engine works and why it's separate from training
 - [docs/API.md](docs/API.md) — request/response contract for the engine API
+- [docs/llm-arena-roadmap.md](docs/llm-arena-roadmap.md) — incremental plan for the manual model-vs-model arena, live UI, and replay storage
 
 ## Contributing
 
