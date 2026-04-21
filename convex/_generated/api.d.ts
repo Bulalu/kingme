@@ -9,6 +9,10 @@
  */
 
 import type * as agents from "../agents.js";
+import type * as arenaAdmin from "../arenaAdmin.js";
+import type * as arenaMatches from "../arenaMatches.js";
+import type * as arenaPlies from "../arenaPlies.js";
+import type * as arenaValidators from "../arenaValidators.js";
 import type * as crons from "../crons.js";
 import type * as games from "../games.js";
 import type * as players from "../players.js";
@@ -22,6 +26,10 @@ import type {
 
 declare const fullApi: ApiFromModules<{
   agents: typeof agents;
+  arenaAdmin: typeof arenaAdmin;
+  arenaMatches: typeof arenaMatches;
+  arenaPlies: typeof arenaPlies;
+  arenaValidators: typeof arenaValidators;
   crons: typeof crons;
   games: typeof games;
   players: typeof players;
