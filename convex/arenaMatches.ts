@@ -3,8 +3,10 @@ import { internalMutation, internalQuery } from "./_generated/server";
 import {
   arenaGameKey,
   arenaParticipant,
+  arenaTerminationReason,
   arenaVariantKey,
   arenaVisibility,
+  arenaWinner,
   engineState,
 } from "./arenaValidators";
 
@@ -79,6 +81,71 @@ export const getByMatchId = internalQuery({
       .query("arenaMatches")
       .withIndex("by_matchId", (q) => q.eq("matchId", matchId))
       .unique();
+  },
+});
+
+// Move a pending match into `running` and stamp startedAt. Throws if
+// the match does not exist or is not currently pending so a misrouted
+// runner cannot re-claim a running/finished match.
+export const claim = internalMutation({
+  args: { matchId: v.string() },
+  handler: async (ctx, { matchId }) => {
+    const match = await ctx.db
+      .query("arenaMatches")
+      .withIndex("by_matchId", (q) => q.eq("matchId", matchId))
+      .unique();
+    if (!match) throw new Error(`arena match ${matchId} not found`);
+    if (match.status !== "pending") {
+      throw new Error(
+        `arena match ${matchId} cannot be claimed (status=${match.status})`,
+      );
+    }
+    await ctx.db.patch(match._id, {
+      status: "running",
+      startedAt: Date.now(),
+    });
+    return match._id;
+  },
+});
+
+// Terminal transition for a match. The runner classifies its outcome
+// (completed / failed / aborted) and passes that status verbatim so the
+// mutation does not re-derive it; we only enforce that the target is
+// actually terminal and that the source match is not already finalized.
+export const finalize = internalMutation({
+  args: {
+    matchId: v.string(),
+    status: v.union(
+      v.literal("completed"),
+      v.literal("failed"),
+      v.literal("aborted"),
+    ),
+    winner: arenaWinner,
+    terminationReason: arenaTerminationReason,
+    errorSummary: v.optional(v.string()),
+  },
+  handler: async (ctx, args) => {
+    const match = await ctx.db
+      .query("arenaMatches")
+      .withIndex("by_matchId", (q) => q.eq("matchId", args.matchId))
+      .unique();
+    if (!match) throw new Error(`arena match ${args.matchId} not found`);
+    if (
+      match.status === "completed" ||
+      match.status === "failed" ||
+      match.status === "aborted"
+    ) {
+      throw new Error(
+        `arena match ${args.matchId} already finalized (status=${match.status})`,
+      );
+    }
+    await ctx.db.patch(match._id, {
+      status: args.status,
+      winner: args.winner,
+      terminationReason: args.terminationReason,
+      errorSummary: args.errorSummary ?? null,
+      endedAt: Date.now(),
+    });
   },
 });
 
