@@ -12,9 +12,6 @@ const nextConfig = {
   turbopack: {
     root: path.resolve(__dirname, "../.."),
   },
-  async redirects() {
-    return [{ source: "/arena", destination: "/sinza", permanent: true }];
-  },
 };
 
 export default nextConfig;

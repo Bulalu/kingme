@@ -149,6 +149,25 @@ export const finalize = internalMutation({
   },
 });
 
+// Flip a match's visibility. Admin-only: this is the hook an operator
+// uses to promote a private/manual match into the public viewer. Kept
+// as a narrow single-field patch so it cannot be used to rewrite
+// match state (use finalize for terminal transitions).
+export const setVisibility = internalMutation({
+  args: {
+    matchId: v.string(),
+    visibility: arenaVisibility,
+  },
+  handler: async (ctx, { matchId, visibility }) => {
+    const match = await ctx.db
+      .query("arenaMatches")
+      .withIndex("by_matchId", (q) => q.eq("matchId", matchId))
+      .unique();
+    if (!match) throw new Error(`arena match ${matchId} not found`);
+    await ctx.db.patch(match._id, { visibility });
+  },
+});
+
 // Recent matches, newest first. `limit` caps at 100 to keep list views
 // cheap; pagination comes later with a cursor-based variant if needed.
 // `visibility` filters to public rows for (future) public listings; when
