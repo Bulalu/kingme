@@ -109,6 +109,15 @@ Owns:
 - If you add new docs for integration, link them from `README.md`.
 - If you change the engine API surface, update `docs/API.md` in the same change.
 
+## Commit and PR Hygiene
+
+Ship work in small, reviewable chunks. A large multi-phase change should become several small PRs, not one mega-PR.
+
+- Each commit should be one logical unit (one concept, one reason to revert). Split scaffolding, feature code, tests, and docs into separate commits where that aids review.
+- Prefer several small PRs over one large one. If a single phase of the roadmap produces more than ~400 lines of non-generated diff across more than ~5 files, stop and consider splitting it.
+- When implementing a multi-step plan, open a PR after each coherent step and let it land before starting the next. Do not stack many unrelated changes behind one review.
+- Exception: trivially coupled changes (e.g. a type change and the single call-site it breaks) stay in one commit.
+
 ## Current Launch Assumption
 
 Until the product adds more public agents, assume:
