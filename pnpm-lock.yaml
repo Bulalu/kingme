@@ -21,6 +21,9 @@ importers:
       '@kingme/shared':
         specifier: workspace:*
         version: link:../../packages/shared
+      convex:
+        specifier: ^1.35.1
+        version: 1.35.1(react@19.2.5)
     devDependencies:
       '@types/node':
         specifier: ^22.9.0

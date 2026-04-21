@@ -1,19 +1,23 @@
 import { parseArgs } from "node:util";
 
 import { createOpenRouterAdapter } from "./adapters/openrouter.js";
-import { loadEnv, loadProfile } from "./config.js";
+import { loadEnv, loadPersistEnv, loadProfile } from "./config.js";
 import { createEngineClient } from "./engineClient.js";
+import { createConvexPersistence } from "./persistence.js";
 import { runMatch } from "./runner.js";
 
 function printUsageAndExit(code: number): never {
   console.error(
     [
-      "Usage: pnpm --filter @kingme/arena-runner run match -- --red <profile.json> --white <profile.json> [--max-plies N] [--out path.json]",
+      "Usage: pnpm --filter @kingme/arena-runner run match -- --red <profile.json> --white <profile.json> [--max-plies N] [--out path.json] [--persist]",
       "",
       "Example:",
-      "  pnpm --filter @kingme/arena-runner run match -- \\",
-      "    --red apps/arena-runner/profiles/openai-gpt-4o-mini.json \\",
-      "    --white apps/arena-runner/profiles/anthropic-claude-haiku.json",
+      "  pnpm --filter @kingme/arena-runner run match \\",
+      "    --red profiles/openai-gpt-4o-mini.json \\",
+      "    --white profiles/anthropic-claude-haiku.json \\",
+      "    --persist",
+      "",
+      "--persist requires CONVEX_URL and ARENA_ADMIN_SECRET in the env.",
     ].join("\n"),
   );
   process.exit(code);
@@ -29,6 +33,7 @@ async function main(): Promise<void> {
       white: { type: "string" },
       "max-plies": { type: "string" },
       out: { type: "string" },
+      persist: { type: "boolean" },
       help: { type: "boolean", short: "h" },
     },
     allowPositionals: false,
@@ -61,6 +66,10 @@ async function main(): Promise<void> {
     process.exit(2);
   }
 
+  const persistence = values.persist
+    ? createConvexPersistence(loadPersistEnv())
+    : undefined;
+
   const result = await runMatch({
     engine,
     adapter,
@@ -68,6 +77,8 @@ async function main(): Promise<void> {
     whiteProfile,
     transcriptPath: values.out,
     maxPlies,
+    persistence,
+    requestedBy: "cli",
   });
 
   if (result.status === "failed") {

@@ -10,7 +10,10 @@
     "isolatedModules": true,
     "resolveJsonModule": true,
     "noEmit": true,
-    "types": ["node"]
+    "types": ["node"],
+    "paths": {
+      "@convex/*": ["../../convex/*"]
+    }
   },
   "include": ["src/**/*.ts"]
 }
