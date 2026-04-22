@@ -18,8 +18,15 @@ def test_health_endpoint() -> None:
 def test_agents_endpoint_lists_builtin_bots() -> None:
     response = client.get("/v1/agents")
     assert response.status_code == 200
-    agent_ids = {agent["id"] for agent in response.json()}
-    assert agent_ids == {"sinza"}
+    payload = response.json()
+    agent_ids = [agent["id"] for agent in payload]
+    assert agent_ids == ["sinza", "sinza-street", "sinza-rookie"]
+    depths = {agent["id"]: agent["depth"] for agent in payload}
+    assert depths == {
+        "sinza": 7,
+        "sinza-street": 6,
+        "sinza-rookie": 4,
+    }
 
 
 def test_apply_and_reply_flow_works_for_builtin_agent() -> None:

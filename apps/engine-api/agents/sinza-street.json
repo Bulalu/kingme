@@ -1,0 +1,9 @@
+{
+  "id": "sinza-street",
+  "display_name": "Sinza Street",
+  "description": "Slightly lighter Sinza sparring tier. Same upgraded alpha-beta engine with shallower search for faster, more beatable play.",
+  "engine": "alphabeta",
+  "depth": 6,
+  "quiescence": true,
+  "public": true
+}

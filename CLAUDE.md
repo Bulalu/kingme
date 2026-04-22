@@ -18,8 +18,9 @@ Checkers is the first live game, not the only planned one.
 Right now:
 
 - the first live game is checkers
-- the first public agent is `sinza`
+- the first released checkers ladder is `sinza`, `sinza-street`, and `sinza-rookie`
 - `sinza` is currently backed by the upgraded alpha-beta engine at depth `7`
+- the lighter public tiers use the same engine family at depths `6` and `4`
 - the live engine API is deployed on Modal
 
 Current live engine base URL:
@@ -63,7 +64,7 @@ For the current checkers integration, the expected loop is:
 1. fetch initial state
 2. fetch legal moves for the current state
 3. apply the human move through the API
-4. ask `sinza` for its reply through the API
+4. ask the selected released agent for its reply through the API
 5. render returned state
 
 ## Working Areas
@@ -120,10 +121,10 @@ Ship work in small, reviewable chunks. A large multi-phase change should become 
 
 ## Current Launch Assumption
 
-Until the product adds more public agents, assume:
+Current serving assumption:
 
-- one public checkers agent: `sinza`
 - one live engine service on Modal
+- released checkers ladder served from `apps/engine-api/agents/*.json`
 - frontend work can proceed against the documented API contract
 
 <!-- convex-ai-start -->

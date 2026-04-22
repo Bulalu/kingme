@@ -20,10 +20,14 @@ function toPublicMatch(m: ArenaMatchDoc) {
     errorSummary: _errorSummary,
     ...rest
   } = m;
-  // Surface cardUrl explicitly so it's always present on the wire —
-  // either the path or null. Client code shouldn't have to care about
-  // the distinction between "undefined on the doc" and "explicit null".
-  return { ...rest, cardUrl: m.cardUrl ?? null };
+  // Surface cardUrl + series explicitly so they're always present on
+  // the wire — either the value or null. Client code shouldn't have
+  // to distinguish "undefined on the doc" from "explicit null".
+  return {
+    ...rest,
+    cardUrl: m.cardUrl ?? null,
+    series: m.series ?? null,
+  };
 }
 
 function toPublicPly(p: ArenaPlyDoc) {

@@ -198,10 +198,198 @@
 
 /* ── Undercard grid ──────────────────────────────────────── */
 
+.undercard-stack {
+  display: flex;
+  flex-direction: column;
+  gap: 40px;
+}
+
 .undercard-grid {
   display: flex;
   flex-wrap: wrap;
   gap: 16px;
+}
+
+/* ── Series block (scorecard + game row) ─────────────────── */
+
+.series {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.series-games {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.series-card {
+  position: relative;
+  overflow: hidden;
+  background: var(--bg-2);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  isolation: isolate;
+  padding: 24px 28px;
+}
+
+.series-card[data-status="live"] {
+  border-color: rgba(255, 75, 43, 0.4);
+}
+
+.series-card-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.series-card-bg-img {
+  object-fit: cover;
+  object-position: center 30%;
+  opacity: 0.22;
+  filter: saturate(0.85);
+}
+
+.series-card-bg-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    linear-gradient(
+      to right,
+      rgba(11, 9, 8, 0.92) 0%,
+      rgba(11, 9, 8, 0.55) 50%,
+      rgba(11, 9, 8, 0.92) 100%
+    ),
+    linear-gradient(to bottom, rgba(11, 9, 8, 0.35), rgba(11, 9, 8, 0.55));
+}
+
+.series-card-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.series-card-eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+}
+
+.series-card-label {
+  color: var(--accent-2);
+  font-weight: 600;
+}
+
+.series-card-dot {
+  color: var(--fg-muted);
+}
+
+.series-card-status[data-status="live"] {
+  color: var(--accent);
+}
+
+.series-card-status[data-status="final"] {
+  color: var(--fg);
+}
+
+.series-card-score {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+  padding: 4px 0;
+}
+
+.series-card-side {
+  font-family: var(--display);
+  font-size: clamp(22px, 3vw, 32px);
+  letter-spacing: 0.01em;
+  text-transform: uppercase;
+  color: var(--fg);
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.series-card-side-a {
+  text-align: left;
+}
+
+.series-card-side-b {
+  text-align: right;
+}
+
+.series-card-tally {
+  display: flex;
+  align-items: baseline;
+  gap: 12px;
+  font-family: var(--display);
+  font-size: clamp(36px, 5vw, 56px);
+  line-height: 1;
+  color: var(--fg);
+  white-space: nowrap;
+}
+
+.series-card-num {
+  min-width: 0.7em;
+  text-align: center;
+}
+
+.series-card-dash {
+  color: var(--fg-muted);
+  font-size: 0.65em;
+  letter-spacing: 0.04em;
+}
+
+.series-card-footer {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--fg-dim);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.series-card-winner strong {
+  color: var(--accent-2);
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.series-card-progress {
+  color: var(--fg-muted);
+}
+
+/* ── GAME N badge (inline alongside status) ─────────────── */
+
+.uc-top-chips {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.uc-game-badge {
+  padding: 3px 8px;
+  background: var(--accent-2);
+  color: #0b0908;
+  font-family: var(--mono);
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  border-radius: 2px;
 }
 
 .uc-card,
