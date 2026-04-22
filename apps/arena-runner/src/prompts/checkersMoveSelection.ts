@@ -208,7 +208,7 @@ function formatMoveHistory(entries: ArenaMoveHistoryEntry[]): string {
 export function buildChatMessages(input: ArenaPromptInput): ChatMessage[] {
   const sorted = sortLegalMoves(input.legalMoves);
 
-  const user = [
+  const lines = [
     `prompt_version: ${ARENA_PROMPT_VERSION}`,
     `you_are_playing: ${input.sideToMove}`,
     "",
@@ -221,10 +221,22 @@ export function buildChatMessages(input: ArenaPromptInput): ChatMessage[] {
     formatLegalMoves(sorted, input.state),
     "",
     'Respond with exactly {"move_pdn": "<one of the legal_moves pdn values>", "say": <string or null>}.',
-  ].join("\n");
+  ];
+
+  // Correction directive for retries. Placed at the end so it's the
+  // last thing the model sees before answering — tacking "try again"
+  // onto a prompt that already failed is what we used to do, and it
+  // kept producing the same wrong answer.
+  if (input.retryFeedback) {
+    lines.push(
+      "",
+      `⚠ correction: ${input.retryFeedback}`,
+      "pick a move_pdn that appears verbatim in legal_moves above, and keep the JSON well-formed.",
+    );
+  }
 
   return [
     { role: "system", content: SYSTEM_PROMPT },
-    { role: "user", content: user },
+    { role: "user", content: lines.join("\n") },
   ];
 }

@@ -32,6 +32,12 @@ export interface ArenaPromptInput {
   sideToMove: ApiColor;
   moveHistory: ArenaMoveHistoryEntry[];
   profile: ArenaProfile;
+  // When set, the runner is retrying a turn because the previous
+  // response failed validation. Prompt builders should surface this
+  // as an explicit correction directive so the model knows what to
+  // fix — just re-asking the same prompt tends to produce the same
+  // wrong answer.
+  retryFeedback?: string | null;
 }
 
 // The only structured output we accept from a model turn. `say` is a
@@ -64,7 +70,7 @@ export interface ArenaModelAdapter {
 //   runner_error / internal crash   -> `failed`
 //
 // `aborted` and `failed` must NOT be counted toward standings.
-export const ARENA_MAX_REPAIR_ATTEMPTS = 1;
+export const ARENA_MAX_REPAIR_ATTEMPTS = 2;
 export const ARENA_MAX_PROVIDER_RETRIES = 1;
 export const ARENA_DEFAULT_TURN_TIMEOUT_MS = 30_000;
 export const ARENA_DEFAULT_MAX_PLIES = 300;
