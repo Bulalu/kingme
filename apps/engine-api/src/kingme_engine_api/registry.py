@@ -65,7 +65,10 @@ class AgentRegistry:
         self._instances: dict[str, object] = {}
 
     def list_configs(self) -> list[ReleasedAgentConfig]:
-        return sorted(self._configs.values(), key=lambda item: item.id)
+        return sorted(
+            self._configs.values(),
+            key=lambda item: (-int(item.public), -item.depth, item.id),
+        )
 
     def get_config(self, agent_id: str) -> ReleasedAgentConfig:
         try:
@@ -123,4 +126,3 @@ class AgentRegistry:
             config = ReleasedAgentConfig.from_mapping(payload)
             configs[config.id] = config
         return configs
-

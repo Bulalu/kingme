@@ -19,7 +19,7 @@ This repo is where the product gets assembled. The heavy experimentation still h
 
 ## What Powers Sinza Today
 
-`sinza` is currently served through our Python engine API and runs on a tuned alpha-beta search engine at depth 7, playing the Tanzanian-style 8×8 draughts variant (flying kings, mandatory captures, captures remain on the board until a multi-jump sequence completes).
+`sinza` is currently served through our Python engine API and runs on our production alpha-beta checkers engine, playing the Tanzanian-style 8×8 draughts variant (flying kings, mandatory captures, captures remain on the board until a multi-jump sequence completes).
 
 We also keep a separate research/training stack where we experiment with self-play, neural guidance, and future checkpoint-backed agents. That research path has not been promoted into production yet.
 
