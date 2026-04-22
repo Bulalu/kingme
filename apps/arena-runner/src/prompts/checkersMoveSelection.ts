@@ -83,17 +83,31 @@ function describePiece(ch: string): string | null {
   return null;
 }
 
-// Squares captured along a multi-jump path. Whenever two consecutive
-// path squares are two rows apart, there is one captured piece on the
-// square between them. Used only for annotation — the engine remains
-// authoritative for what the capture actually does.
-function capturedSquares(path: number[]): number[] {
+// Squares captured along a multi-jump path. For man captures the
+// captured piece sits on the midpoint (row delta 2), but Tanzanian
+// flying kings can capture across longer diagonals — so for each
+// segment we walk the diagonal from `from` to `to` and find the
+// single occupied square between them (Tanzanian rules allow at most
+// one capture per segment). Used only for annotation — the engine
+// remains authoritative for what the capture actually does.
+function capturedSquares(path: number[], state: StatePayload): number[] {
   const caught: number[] = [];
   for (let i = 0; i < path.length - 1; i++) {
     const [ar, ac] = squareToCoord(path[i]);
     const [br, bc] = squareToCoord(path[i + 1]);
-    if (Math.abs(ar - br) === 2) {
-      caught.push(coordToSquare((ar + br) / 2, (ac + bc) / 2));
+    const dr = Math.sign(br - ar);
+    const dc = Math.sign(bc - ac);
+    if (dr === 0 || dc === 0) continue;
+    let r = ar + dr;
+    let c = ac + dc;
+    while (r !== br || c !== bc) {
+      const ch = state.rows[r]?.[c];
+      if (ch && ch !== ".") {
+        caught.push(coordToSquare(r, c));
+        break;
+      }
+      r += dr;
+      c += dc;
     }
   }
   return caught;
@@ -148,7 +162,7 @@ function annotateMove(move: MovePayload, state: StatePayload): string {
     const base = `${mover} advances ${pathStr}`;
     return move.promotes ? `${base} (promotes to king)` : base;
   }
-  const caught = capturedSquares(move.path)
+  const caught = capturedSquares(move.path, state)
     .map((sq) => {
       const piece = describePiece(pieceAt(state, sq));
       return piece ? `${piece} at ${sq}` : `square ${sq}`;
