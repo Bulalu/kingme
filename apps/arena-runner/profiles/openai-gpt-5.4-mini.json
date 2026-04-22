@@ -5,7 +5,7 @@
   "model": "openai/gpt-5.4-mini",
   "promptVersion": "checkers-move-selection-v2",
   "temperature": 0,
-  "maxOutputTokens": 256,
+  "maxOutputTokens": 512,
   "timeoutMs": 30000,
   "reasoning": { "effort": "low" },
   "gameKey": "checkers",
