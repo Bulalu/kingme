@@ -35,6 +35,9 @@ function toPublicPly(p: ArenaPlyDoc) {
     stateBefore: p.stateBefore,
     stateAfter: p.stateAfter,
     latencyMs: p.latencyMs,
+    // say is public-safe — it's a deliberate in-character line the
+    // model emitted as part of the game, not a debug trace.
+    say: p.say ?? null,
     createdAt: p.createdAt,
   };
 }

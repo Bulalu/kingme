@@ -17,6 +17,7 @@ import type {
 import type {
   ArenaModelAdapter,
   ArenaModelSelection,
+  ArenaMoveHistoryEntry,
 } from "@kingme/shared/arena-prompt";
 import {
   ARENA_DEFAULT_MAX_PLIES,
@@ -188,7 +189,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
   const initialState = await opts.engine.getInitialState();
   let state: StatePayload = initialState;
   const plies: ArenaPly[] = [];
-  const moveHistory: string[] = [];
+  const moveHistory: ArenaMoveHistoryEntry[] = [];
   let legal = await opts.engine.getLegalMoves(state);
   let winner = legal.winner;
 
@@ -281,13 +282,18 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
         stateBefore,
         stateAfter: applied.state,
         latencyMs: selection.latencyMs,
+        say: selection.say,
         providerRequestId: selection.providerRequestId,
         rawOutput: selection.rawOutput,
         usage: selection.usage,
         createdAt: Date.now(),
       };
       plies.push(ply);
-      moveHistory.push(applied.applied_move.pdn);
+      moveHistory.push({
+        side: sideToMove,
+        movePdn: applied.applied_move.pdn,
+        say: selection.say,
+      });
       opts.onPly?.(ply);
 
       if (persistence) {
@@ -302,6 +308,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
             stateBefore: ply.stateBefore,
             stateAfter: ply.stateAfter,
             latencyMs: ply.latencyMs,
+            say: ply.say ?? null,
             providerRequestId: ply.providerRequestId,
             rawOutput: ply.rawOutput,
             usage: ply.usage,
@@ -311,7 +318,8 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
         }
       }
 
-      log(`  -> ${applied.applied_move.pdn} (${selection.latencyMs}ms)`);
+      const sayStr = selection.say ? ` | "${selection.say}"` : "";
+      log(`  -> ${applied.applied_move.pdn} (${selection.latencyMs}ms)${sayStr}`);
     }
 
     if (status === "running") {

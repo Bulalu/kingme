@@ -100,6 +100,7 @@ export interface ArenaPly {
   stateBefore: StatePayload;
   stateAfter: StatePayload;
   latencyMs: number;
+  say?: string | null;
   providerRequestId?: string;
   rawOutput?: string;
   usage?: ArenaUsage;

@@ -3,7 +3,7 @@
   "displayName": "gpt-4o-mini",
   "provider": "openrouter",
   "model": "openai/gpt-4o-mini",
-  "promptVersion": "checkers-move-selection-v1",
+  "promptVersion": "checkers-move-selection-v2",
   "temperature": 0,
   "maxOutputTokens": 64,
   "timeoutMs": 30000,

@@ -3,7 +3,7 @@
   "displayName": "claude-haiku-4.5",
   "provider": "openrouter",
   "model": "anthropic/claude-haiku-4.5",
-  "promptVersion": "checkers-move-selection-v1",
+  "promptVersion": "checkers-move-selection-v2",
   "temperature": 0,
   "maxOutputTokens": 64,
   "timeoutMs": 30000,
