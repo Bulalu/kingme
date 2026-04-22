@@ -22,19 +22,14 @@ const STATUS_LABEL: Record<ArenaStatus, string> = {
   aborted: "aborted",
 };
 
-// Per-matchup card art. Key is `{red.displayName}__{white.displayName}` —
-// lowercase. When a match's participant display names match a key, the
-// undercard renders the image as a fight-poster background instead of
-// the auto-generated layout. Stopgap until we add a proper cardUrl
-// field on arenaMatches — good enough while the matchup roster is small.
+// Per-matchup card art. Key is `{red.displayName}__{white.displayName}`,
+// lowercase. Falls back to the auto-generated layout when a match isn't
+// mapped. Stopgap until we persist a cardUrl on arenaMatches directly.
 const MATCHUP_CARDS: Record<string, string> = {
   "gpt-5.4-mini__claude-haiku-4.5":
     "/arena/cards/gpt-5.4-mini__claude-haiku-4.5.png",
-  // Legacy dev alias — the old `gpt-4o-mini` profile was renamed to
-  // `gpt-5.4-mini` but historical Convex matches still carry the old
-  // display name in their participant snapshot. Same matchup, same
-  // card art. Remove this entry once those older dev matches are
-  // purged or re-snapshotted.
+  // Legacy dev alias — old `gpt-4o-mini` profile was renamed to
+  // `gpt-5.4-mini`. Remove once those older dev snapshots are rotated.
   "gpt-4o-mini__claude-haiku-4.5":
     "/arena/cards/gpt-5.4-mini__claude-haiku-4.5.png",
 };
@@ -82,87 +77,89 @@ export default function ArenaPage() {
 
   return (
     <main className="arena-page">
-      <VenueHeader />
-      <MainEvent />
-      <Undercard matches={matches as PublicMatch[] | undefined} />
+      <section className="km-wrap arena-head">
+        <div className="km-kicker">
+          <span className="km-kicker-dot" />
+          the arena
+        </div>
+        <h1 className="arena-h1">
+          llms at the <span className="km-accent-text">draughts board</span>
+        </h1>
+        <p className="arena-lede">
+          you&rsquo;ve seen the benchmarks. now watch them play checkers.
+        </p>
+      </section>
+
+      <section className="km-wrap arena-section">
+        <SectionHead label="main event" />
+        <MainEvent />
+      </section>
+
+      <section className="km-wrap arena-section">
+        <SectionHead label="undercard" />
+        <Undercard matches={matches as PublicMatch[] | undefined} />
+      </section>
     </main>
   );
 }
 
-function VenueHeader() {
+function SectionHead({ label }: { label: string }) {
   return (
-    <header className="arena-venue">
-      <p className="arena-eyebrow">tonight · the arena</p>
-      <h1 className="arena-title">
-        <span className="arena-title-lead">llms</span>{" "}
-        <span className="arena-title-break">at the</span>{" "}
-        <span className="arena-title-accent">draughts board</span>
-      </h1>
-      <p className="arena-sub">
-        you&rsquo;ve seen the benchmarks. now watch them play checkers.
-      </p>
-    </header>
-  );
-}
-
-function Divider({ label }: { label: string }) {
-  return (
-    <div className="arena-divider" role="separator" aria-label={label}>
-      <span className="arena-divider-dash" aria-hidden="true" />
-      <span className="arena-divider-label">{label}</span>
-      <span className="arena-divider-dash" aria-hidden="true" />
+    <div className="arena-section-head" role="separator" aria-label={label}>
+      <span className="arena-section-rule" aria-hidden="true" />
+      <span className="arena-section-label">{label}</span>
+      <span className="arena-section-rule" aria-hidden="true" />
     </div>
   );
 }
 
 function MainEvent() {
   return (
-    <section className="main-event">
-      <Divider label="main event" />
-      <figure className="main-event-card">
-        <Image
-          src="/arena/main-event.png"
-          alt="GPT-5.4 vs Opus 4.7 — checkers showdown main event poster"
-          width={1536}
-          height={1024}
-          priority
-          sizes="(max-width: 1100px) 100vw, 1040px"
-          className="main-event-poster"
-        />
-        <div className="main-event-scrim" aria-hidden="true" />
-        <figcaption className="main-event-meta">
-          <span className="main-event-status">
-            <span className="main-event-pulse" aria-hidden="true" />
-            dropping soon
-          </span>
-          <span className="main-event-divider" aria-hidden="true">·</span>
-          <span className="main-event-detail">best of 5 · date tba</span>
-          <span className="main-event-divider" aria-hidden="true">·</span>
-          <span className="main-event-detail">frontier-model showdown</span>
-        </figcaption>
-      </figure>
-    </section>
+    <figure className="main-event">
+      <Image
+        src="/arena/main-event.png"
+        alt="GPT-5.4 vs Opus 4.7 — checkers showdown"
+        fill
+        priority
+        sizes="(max-width: 720px) 100vw, (max-width: 1320px) calc(100vw - 96px), 1224px"
+        className="main-event-img"
+      />
+      <div className="main-event-scrim" aria-hidden="true" />
+      <figcaption className="main-event-footer">
+        <span className="main-event-pill">
+          <span className="main-event-pill-dot" aria-hidden="true" />
+          dropping soon
+        </span>
+        <span className="main-event-dot" aria-hidden="true">
+          ·
+        </span>
+        <span className="main-event-meta">best of 5 · date tba</span>
+        <span className="main-event-dot" aria-hidden="true">
+          ·
+        </span>
+        <span className="main-event-meta">frontier-model showdown</span>
+      </figcaption>
+    </figure>
   );
 }
 
 function Undercard({ matches }: { matches?: PublicMatch[] }) {
+  if (matches === undefined) {
+    return <p className="undercard-empty">loading undercard…</p>;
+  }
+  if (matches.length === 0) {
+    return (
+      <p className="undercard-empty">
+        undercard to be announced. check back soon.
+      </p>
+    );
+  }
   return (
-    <section className="undercard">
-      <Divider label="undercard" />
-      {matches === undefined ? (
-        <p className="undercard-empty">loading undercard…</p>
-      ) : matches.length === 0 ? (
-        <p className="undercard-empty">
-          undercard to be announced. check back soon.
-        </p>
-      ) : (
-        <div className="undercard-grid">
-          {matches.map((m) => (
-            <UndercardCard key={m._id} match={m} />
-          ))}
-        </div>
-      )}
-    </section>
+    <div className="undercard-grid">
+      {matches.map((m) => (
+        <UndercardCard key={m._id} match={m} />
+      ))}
+    </div>
   );
 }
 
@@ -183,7 +180,7 @@ function UndercardCard({ match }: { match: PublicMatch }) {
           src={cardArt}
           alt={`${red} vs ${white} — matchup card`}
           fill
-          sizes="(max-width: 720px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          sizes="(max-width: 720px) 100vw, (max-width: 1100px) 50vw, 33vw"
           className="uc-poster-img"
         />
         <div className="uc-poster-scrim" aria-hidden="true" />
@@ -194,10 +191,10 @@ function UndercardCard({ match }: { match: PublicMatch }) {
           <span className="uc-when">{formatWhen(match.requestedAt)}</span>
         </div>
         <div className="uc-poster-footer">
+          <span className="uc-poster-plies">{match.totalPlies} plies</span>
           <span className="uc-poster-result">
             {winnerLine(match.winner, red, white)}
           </span>
-          <span className="uc-poster-plies">{match.totalPlies} plies</span>
         </div>
       </Link>
     );
@@ -209,10 +206,6 @@ function UndercardCard({ match }: { match: PublicMatch }) {
       className="uc-card"
       data-status={status}
     >
-      <div className="uc-bg" aria-hidden="true">
-        <span className="uc-chip uc-chip-red" />
-        <span className="uc-chip uc-chip-white" />
-      </div>
       <div className="uc-top">
         <span className="uc-status" data-status={status}>
           {STATUS_LABEL[status] ?? status}
