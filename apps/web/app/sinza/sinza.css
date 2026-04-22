@@ -786,23 +786,23 @@ a { color: inherit; text-decoration: none; }
   color: var(--ar-fg-muted);
 }
 
-/* laughing emoji rain on loss */
-.ar-laugh-rain {
+/* loss emoji rain */
+.ar-emoji-rain {
   position: absolute;
   inset: 0;
   overflow: hidden;
   pointer-events: none;
   z-index: 1;
 }
-.ar-laugh {
+.ar-emoji-drop {
   position: absolute;
   top: -80px;
   line-height: 1;
-  animation: arLaughFall linear infinite;
+  animation: arEmojiFall linear infinite;
   filter: drop-shadow(0 4px 10px rgba(0,0,0,0.5));
   will-change: transform;
 }
-@keyframes arLaughFall {
+@keyframes arEmojiFall {
   0%   { transform: translate(0, -120px) rotate(0deg); opacity: 0; }
   10%  { opacity: 1; }
   90%  { opacity: 1; }

@@ -259,23 +259,40 @@ export function Roster() {
       winRate: "87.2%",
       params: "61M",
       version: "v0.4",
-      bio: "Tabata plays like the bar is already his and your seat is temporary. Relaxed face, rude board control, no free exits.",
+      bio: "Tokea uswazi siachi ukoko. Tokea mageto huu ndo mtoko, matendo sina ropo ropo.",
       quote:
-        "\"take your time. the trap is still there when you're done.\"",
+        '"Tokea uswazi siachi ukoko. Tokea mageto huu ndo mtoko, matendo sina ropo ropo."',
       style: "patient · owns the tempo",
+    },
+    {
+      id: "manzese",
+      img: "/assets/manzese.webp",
+      name: "MZE MANZESE",
+      tagline: "the old man",
+      game: "Checkers",
+      status: "training" as const,
+      elo: "—",
+      games: "—",
+      winRate: "—",
+      params: "61M",
+      version: "v0.7",
+      bio: "Mze Manzese is back in the room, still reading the board like it owes him rent. He's in training for the next release.",
+      quote:
+        '"training"',
+      style: "in training · old-school pressure",
     },
   ];
   return (
     <section className="km-section km-roster" data-screen-label="03 Agents">
       <SectionHead
-        kicker="the roster · 03 agents"
+        kicker="the roster · 04 agents"
         title={
           <>
             Pick your <span className="km-strike">agent</span>{" "}
             <span className="km-accent-text">loss.</span>
           </>
         }
-        sub="Every game on kingme gets its own agent — its own training run, its own personality, its own way of making you lose. Here are the first three."
+        sub="Every game on kingme gets its own agent — its own training run, its own personality, its own way of making you lose. Here are the first four."
       />
       <div className="km-roster-grid">
         {agents.map((a) => (
@@ -302,6 +319,7 @@ export function Roster() {
                 <div className="km-agent-version">{a.version}</div>
               </div>
               <p className="km-agent-bio">{a.bio}</p>
+              <div className="km-agent-quote">{a.quote}</div>
               <div className="km-agent-foot">
                 <span className="km-agent-style">{a.style}</span>
                 {a.status === "live" ? (
