@@ -148,6 +148,13 @@ export function createOpenRouterAdapter(
               model: input.profile.model,
               temperature: input.profile.temperature,
               max_tokens: input.profile.maxOutputTokens,
+              // Forwarded verbatim to OpenRouter's `reasoning` field;
+              // the provider routes it to each model's native control
+              // (effort for OpenAI, max_tokens for Anthropic thinking,
+              // etc.). Omitting it uses OpenRouter's defaults.
+              ...(input.profile.reasoning
+                ? { reasoning: input.profile.reasoning }
+                : {}),
               messages,
               response_format: {
                 type: "json_schema",
