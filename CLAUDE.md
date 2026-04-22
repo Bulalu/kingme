@@ -18,9 +18,9 @@ Checkers is the first live game, not the only planned one.
 Right now:
 
 - the first live game is checkers
-- the first released checkers ladder is `sinza`, `sinza-street`, and `sinza-rookie`
+- the first released checkers lineup is `sinza`, `sinza-street`, and `sinza-pulse`
 - `sinza` is currently backed by the upgraded alpha-beta engine at depth `7`
-- the lighter public tiers use the same engine family at depths `6` and `4`
+- the other public Sinza profiles use the same engine family at depths `6` and `4`
 - the live engine API is deployed on Modal
 
 Current live engine base URL:

@@ -20,12 +20,12 @@ def test_agents_endpoint_lists_builtin_bots() -> None:
     assert response.status_code == 200
     payload = response.json()
     agent_ids = [agent["id"] for agent in payload]
-    assert agent_ids == ["sinza", "sinza-street", "sinza-rookie"]
+    assert agent_ids == ["sinza", "sinza-street", "sinza-pulse"]
     depths = {agent["id"]: agent["depth"] for agent in payload}
     assert depths == {
         "sinza": 7,
         "sinza-street": 6,
-        "sinza-rookie": 4,
+        "sinza-pulse": 4,
     }
 
 

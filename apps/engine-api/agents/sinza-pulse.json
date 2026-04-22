@@ -1,0 +1,9 @@
+{
+  "id": "sinza-pulse",
+  "display_name": "Sinza Pulse",
+  "description": "Quick-fire Sinza release. Same engine family, faster cadence, same board sense.",
+  "engine": "alphabeta",
+  "depth": 4,
+  "quiescence": true,
+  "public": true
+}

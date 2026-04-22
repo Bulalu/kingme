@@ -111,16 +111,16 @@ If you want a released checkpoint-backed bot on Modal later, add the checkpoint 
 
 ## Live Product Agents
 
-Current released checkers ladder:
+Current released checkers lineup:
 
 - `sinza`
-  strongest owned release, upgraded `alphabeta`, `depth: 7`
+  flagship public release, upgraded `alphabeta`, `depth: 7`
 - `sinza-street`
-  lighter sparring tier, upgraded `alphabeta`, `depth: 6`
-- `sinza-rookie`
-  most approachable public tier, upgraded `alphabeta`, `depth: 4`
+  street-cut Sinza profile, upgraded `alphabeta`, `depth: 6`
+- `sinza-pulse`
+  quick-fire Sinza profile, upgraded `alphabeta`, `depth: 4`
 
-This is deliberate. The older neural hybrid checkpoints are interesting, but they are not yet the strongest serving choice. Until a checkpoint-backed release clearly beats the upgraded search engine, the public ladder should stay on the stronger search-backed engine family.
+These are distinct released Sinza profiles in the same engine family. The older neural hybrid checkpoints are interesting, but they are not yet the strongest serving choice. Until a checkpoint-backed release clearly beats the upgraded search engine, production stays on the stronger search-backed engine family.
 
 ## Environment
 

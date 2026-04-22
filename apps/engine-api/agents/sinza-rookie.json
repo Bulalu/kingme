@@ -1,9 +1,0 @@
-{
-  "id": "sinza-rookie",
-  "display_name": "Sinza Rookie",
-  "description": "Most approachable public Sinza tier. Noticeably lighter search for quicker replies and a wider human mistake window.",
-  "engine": "alphabeta",
-  "depth": 4,
-  "quiescence": true,
-  "public": true
-}
