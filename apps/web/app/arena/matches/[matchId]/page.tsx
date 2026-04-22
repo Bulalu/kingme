@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { use } from "react";
+import { use, useEffect, useRef } from "react";
 import { usePaginatedQuery, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import type { StatePayload } from "@kingme/shared/engine";
@@ -47,31 +47,188 @@ function winnerLine(
 ): string {
   if (winner === null) return "no winner";
   if (winner === "draw") return "draw";
-  if (winner === "red") return `${red} wins`;
-  return `${white} wins`;
+  if (winner === "red") return `${red} won`;
+  return `${white} won`;
+}
+
+interface ParticipantSnapshot {
+  displayName: string;
+  model: string;
+  promptVersion: string;
+  temperature: number;
+  maxOutputTokens: number;
+}
+
+interface PublicPly {
+  _id: string;
+  plyIndex: number;
+  side: "red" | "white";
+  movePdn: string;
+  stateBefore: StatePayload;
+  stateAfter: StatePayload;
+  say: string | null;
+  latencyMs: number;
+  createdAt: number;
+}
+
+export default function ArenaMatchPage({
+  params,
+}: {
+  params: Promise<{ matchId: string }>;
+}) {
+  const { matchId } = use(params);
+  const match = useQuery(api.arenaPublic.getMatch, { matchId });
+  const pliesResult = usePaginatedQuery(
+    api.arenaPublic.listPlies,
+    { matchId },
+    { initialNumItems: 300 },
+  );
+
+  if (match === undefined) {
+    return (
+      <main className="match-page">
+        <div className="km-wrap match-loading">loading match…</div>
+      </main>
+    );
+  }
+
+  if (match === null) {
+    return (
+      <main className="match-page">
+        <div className="km-wrap">
+          <Link href="/arena" className="match-back">
+            ← back to arena
+          </Link>
+          <p className="match-missing">
+            match not found. it may be private, or it never existed.
+          </p>
+        </div>
+      </main>
+    );
+  }
+
+  const plies = pliesResult.results as PublicPly[];
+  const status = match.status as ArenaStatus;
+  const red = match.redParticipant.displayName;
+  const white = match.whiteParticipant.displayName;
+  const duration = formatDuration(match.startedAt, match.endedAt);
+  const isLive = status === "running";
+
+  return (
+    <main className="match-page">
+      <div className="km-wrap">
+        <div className="match-head">
+          <Link href="/arena" className="match-back">
+            ← back to arena
+          </Link>
+          <div className="km-kicker match-kicker">
+            <span className="km-kicker-dot" />
+            {isLive ? "the arena · live" : "the arena · match"}
+          </div>
+          <h1 className="match-title">
+            <span className="match-title-red">{red}</span>
+            <span className="match-title-vs">vs</span>
+            <span className="match-title-white">{white}</span>
+          </h1>
+          <div className="match-meta" data-status={status}>
+            <span className="match-status">
+              {STATUS_LABEL[status] ?? status}
+            </span>
+            <span className="match-meta-dot">·</span>
+            <span>{match.totalPlies} plies</span>
+            {duration && (
+              <>
+                <span className="match-meta-dot">·</span>
+                <span>{duration}</span>
+              </>
+            )}
+            <span className="match-meta-dot">·</span>
+            <span>{formatWhen(match.requestedAt)}</span>
+            <span className="match-meta-dot">·</span>
+            <span className="match-meta-result">
+              {winnerLine(match.winner, red, white)}
+            </span>
+          </div>
+        </div>
+
+        <div className="match-stage">
+          <section className="match-board-col">
+            <ParticipantStrip
+              side="red"
+              snapshot={match.redParticipant}
+              sideToMove={match.currentState.side_to_move}
+              status={status}
+            />
+            <BoardChrome state={match.currentState} matchId={matchId} status={status} />
+            <ParticipantStrip
+              side="white"
+              snapshot={match.whiteParticipant}
+              sideToMove={match.currentState.side_to_move}
+              status={status}
+            />
+            <MoveTicker plies={plies} total={match.totalPlies} />
+          </section>
+
+          <aside className="match-chat-col">
+            <CommentaryPanel plies={plies} status={status} />
+          </aside>
+        </div>
+      </div>
+    </main>
+  );
+}
+
+// ── Board ────────────────────────────────────────────────────
+
+function BoardChrome({
+  state,
+  matchId,
+  status,
+}: {
+  state: StatePayload;
+  matchId: string;
+  status: ArenaStatus;
+}) {
+  const badge =
+    status === "running" ? "● LIVE" : status === "completed" ? "● FINAL" : status.toUpperCase();
+  const shortId = matchId.slice(0, 8);
+  return (
+    <div className="km-board-chrome match-chrome">
+      <div className="km-chrome-row">
+        <span className="km-chrome-dot" />
+        <span className="km-chrome-dot" />
+        <span className="km-chrome-dot" />
+        <span className="km-chrome-title">kingme://arena/{shortId}</span>
+        <span className="km-chrome-badge" data-status={status}>
+          {badge}
+        </span>
+      </div>
+      <ArenaBoard state={state} />
+    </div>
+  );
 }
 
 function ArenaBoard({ state }: { state: StatePayload }) {
   return (
-    <div className="arena-board" role="img" aria-label="current board position">
+    <div className="match-board" role="img" aria-label="current board position">
       {state.rows.map((row, r) => (
-        <div key={r} className="arena-board-row">
+        <div key={r} className="match-board-row">
           {Array.from(row).map((ch, c) => {
             const isDark = (r + c) % 2 === 1;
             const pieceClass =
               ch === "r"
-                ? "piece red man"
+                ? "match-piece match-piece-red"
                 : ch === "R"
-                ? "piece red king"
+                ? "match-piece match-piece-red match-piece-king"
                 : ch === "w"
-                ? "piece white man"
+                ? "match-piece match-piece-white"
                 : ch === "W"
-                ? "piece white king"
+                ? "match-piece match-piece-white match-piece-king"
                 : null;
             return (
               <div
                 key={c}
-                className={`arena-board-sq ${isDark ? "dark" : "light"}`}
+                className={`match-sq ${isDark ? "match-sq-dark" : "match-sq-light"}`}
               >
                 {pieceClass && <span className={pieceClass} />}
               </div>
@@ -83,149 +240,128 @@ function ArenaBoard({ state }: { state: StatePayload }) {
   );
 }
 
-export default function ArenaMatchPage({
-  params,
+// ── Participant strips (red corner + white corner) ──────────
+
+function ParticipantStrip({
+  side,
+  snapshot,
+  sideToMove,
+  status,
 }: {
-  params: Promise<{ matchId: string }>;
+  side: "red" | "white";
+  snapshot: ParticipantSnapshot;
+  sideToMove: "red" | "white";
+  status: ArenaStatus;
 }) {
-  const { matchId } = use(params);
-  const match = useQuery(api.arenaPublic.getMatch, { matchId });
-  // initialNumItems covers almost every match in one page; if a run hits the
-  // 300-ply cap the user can load more, but typical games finish far sooner.
-  const pliesResult = usePaginatedQuery(
-    api.arenaPublic.listPlies,
-    { matchId },
-    { initialNumItems: 300 },
-  );
-
-  if (match === undefined) {
-    return (
-      <main className="arena-match">
-        <p className="arena-match-loading">loading match…</p>
-      </main>
-    );
-  }
-
-  if (match === null) {
-    return (
-      <main className="arena-match">
-        <header className="arena-match-header">
-          <Link href="/arena" className="arena-back">
-            ← back to arena
-          </Link>
-        </header>
-        <p className="arena-match-missing">
-          match not found. it may be private or it might never have existed.
-        </p>
-      </main>
-    );
-  }
-
-  const plies = pliesResult.results;
-  const red = match.redParticipant.displayName;
-  const white = match.whiteParticipant.displayName;
-  const duration = formatDuration(match.startedAt, match.endedAt);
-
+  const toMove = status === "running" && sideToMove === side;
   return (
-    <main className="arena-match">
-      <header className="arena-match-header">
-        <Link href="/arena" className="arena-back">
-          ← back to arena
-        </Link>
-        <h1 className="arena-match-title">
-          <span className="arena-side arena-red">{red}</span>
-          <span className="arena-vs">vs</span>
-          <span className="arena-side arena-white">{white}</span>
-        </h1>
-        <div className="arena-match-meta" data-status={match.status}>
-          <span className="arena-status">
-            {STATUS_LABEL[match.status as ArenaStatus] ?? match.status}
-          </span>
-          <span>·</span>
-          <span>{match.totalPlies} plies</span>
-          {duration && (
-            <>
-              <span>·</span>
-              <span>{duration}</span>
-            </>
-          )}
-          <span>·</span>
-          <span>{formatWhen(match.requestedAt)}</span>
-          <span>·</span>
-          <span className="arena-result">{winnerLine(match.winner, red, white)}</span>
-        </div>
-      </header>
-
-      <section className="arena-match-body">
-        <div className="arena-participants">
-          <ParticipantCard side="red" snapshot={match.redParticipant} />
-          <ParticipantCard side="white" snapshot={match.whiteParticipant} />
-        </div>
-
-        <div className="arena-board-wrap">
-          <ArenaBoard state={match.currentState} />
-          <p className="arena-board-caption">
-            {match.status === "running"
-              ? `${match.currentState.side_to_move} to move`
-              : `final position — ${match.totalPlies} plies played`}
-          </p>
-        </div>
-      </section>
-
-      <section className="arena-moves">
-        <h2 className="arena-moves-heading">moves</h2>
-        {plies.length === 0 ? (
-          <p className="arena-moves-empty">no plies yet.</p>
-        ) : (
-          <ol className="arena-moves-list">
-            {plies.map((p) => (
-              <li
-                key={p._id}
-                className="arena-move-row"
-                data-side={p.side}
-              >
-                <span className="arena-move-index">{p.plyIndex + 1}</span>
-                <span className={`arena-move-side arena-${p.side}`}>{p.side}</span>
-                <span className="arena-move-pdn">{p.movePdn}</span>
-                {p.say && (
-                  <span className="arena-move-say">&ldquo;{p.say}&rdquo;</span>
-                )}
-              </li>
-            ))}
-          </ol>
-        )}
-      </section>
-    </main>
+    <div className={`match-strip match-strip-${side}`} data-to-move={toMove}>
+      <span className={`match-strip-dot match-strip-dot-${side}`} />
+      <div className="match-strip-body">
+        <span className="match-strip-side">{side}</span>
+        <span className="match-strip-name">{snapshot.displayName}</span>
+      </div>
+      <span className="match-strip-model">{snapshot.model}</span>
+      {toMove && <span className="match-strip-tomove">to move</span>}
+    </div>
   );
 }
 
-function ParticipantCard({
-  side,
-  snapshot,
+// ── Compact move ticker (below the board) ──────────────────
+
+function MoveTicker({
+  plies,
+  total,
 }: {
-  side: "red" | "white";
-  snapshot: {
-    displayName: string;
-    model: string;
-    promptVersion: string;
-    temperature: number;
-    maxOutputTokens: number;
-  };
+  plies: PublicPly[];
+  total: number;
 }) {
   return (
-    <div className={`arena-participant arena-participant-${side}`}>
-      <p className="arena-participant-side">{side}</p>
-      <p className="arena-participant-name">{snapshot.displayName}</p>
-      <dl className="arena-participant-meta">
-        <dt>model</dt>
-        <dd>{snapshot.model}</dd>
-        <dt>prompt</dt>
-        <dd>{snapshot.promptVersion}</dd>
-        <dt>temp</dt>
-        <dd>{snapshot.temperature}</dd>
-        <dt>max out</dt>
-        <dd>{snapshot.maxOutputTokens}</dd>
-      </dl>
+    <div className="match-ticker">
+      <div className="match-ticker-head">
+        <span>moves</span>
+        <span className="match-ticker-count">{total}</span>
+      </div>
+      {plies.length === 0 ? (
+        <p className="match-ticker-empty">no moves yet.</p>
+      ) : (
+        <ol className="match-ticker-list">
+          {plies.map((p) => (
+            <li
+              key={p._id}
+              className="match-ticker-row"
+              data-side={p.side}
+            >
+              <span className="match-ticker-idx">{p.plyIndex + 1}</span>
+              <span className={`match-ticker-side match-ticker-side-${p.side}`}>
+                {p.side === "red" ? "●" : "○"}
+              </span>
+              <span className="match-ticker-pdn">{p.movePdn}</span>
+            </li>
+          ))}
+        </ol>
+      )}
+    </div>
+  );
+}
+
+// ── Commentary chat panel ──────────────────────────────────
+
+function CommentaryPanel({
+  plies,
+  status,
+}: {
+  plies: PublicPly[];
+  status: ArenaStatus;
+}) {
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const commented = plies.filter((p) => p.say && p.say.trim().length > 0);
+
+  // Auto-scroll to bottom as new messages land — classic live-chat behaviour.
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTop = el.scrollHeight;
+  }, [commented.length]);
+
+  const isLive = status === "running";
+
+  return (
+    <div className="chat" data-status={status}>
+      <div className="chat-head">
+        <span className="chat-head-dot" data-live={isLive} />
+        <span className="chat-head-label">
+          {isLive ? "live commentary" : "commentary"}
+        </span>
+        <span className="chat-head-count">{commented.length}</span>
+      </div>
+      <div className="chat-scroll" ref={scrollRef}>
+        {commented.length === 0 ? (
+          <p className="chat-empty">
+            {isLive
+              ? "waiting for the first chirp…"
+              : "silent match. nothing said."}
+          </p>
+        ) : (
+          <ul className="chat-list">
+            {commented.map((p, i) => (
+              <li
+                key={p._id}
+                className="chat-msg"
+                data-side={p.side}
+                style={{ animationDelay: `${Math.min(i * 40, 400)}ms` }}
+              >
+                <header className="chat-msg-head">
+                  <span className={`chat-msg-dot chat-msg-dot-${p.side}`} />
+                  <span className="chat-msg-side">{p.side}</span>
+                  <span className="chat-msg-ply">ply {p.plyIndex + 1}</span>
+                </header>
+                <p className="chat-msg-body">&ldquo;{p.say}&rdquo;</p>
+              </li>
+            ))}
+          </ul>
+        )}
+      </div>
     </div>
   );
 }
