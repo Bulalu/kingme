@@ -55,12 +55,19 @@ const AGENTS: Record<string, Agent> = {
     venue: "SINZA KIJIWENI",
     img: "/assets/sinza.webp",
   },
-  manzese: {
-    id: "manzese",
-    name: "MZE MANZESE",
-    tagline: "the old man",
-    venue: "MANZESE BACK OFFICE",
-    img: "/assets/manzese.webp",
+  masaki: {
+    id: "masaki",
+    name: "MASAKI",
+    tagline: "the closer",
+    venue: "MASAKI SOCIAL CLUB",
+    img: "/assets/masaki.png",
+  },
+  tabata: {
+    id: "tabata",
+    name: "TABATA",
+    tagline: "the landlord",
+    venue: "TABATA SUPPER ROOM",
+    img: "/assets/tabata.png",
   },
 };
 
@@ -80,6 +87,14 @@ const BOARD_STYLES: Record<string, BoardStyle> = {
     dark: "#3a5a3a",
     frame: "#1a120a",
     frame2: "#3a2414",
+    pieceDark: "ink",
+  },
+  rose: {
+    label: "rose velvet",
+    light: "#f2d7de",
+    dark: "#8f4f69",
+    frame: "#241116",
+    frame2: "#512433",
     pieceDark: "ink",
   },
 };
@@ -196,10 +211,12 @@ interface PostGameProps {
 function PostGame({ status, agent, moves, onExit, onRematch }: PostGameProps) {
   const lost = status === "black";
   const won = status === "red";
+  const lossEmoji =
+    agent.id === "masaki" ? "😘" : agent.id === "tabata" ? "🍺" : "😂";
 
   // Intentional non-determinism for the falling-emoji effect. Computed once
   // per mount via a lazy useState initializer so re-renders don't reshuffle.
-  const [laughs] = useState(() => {
+  const [drops] = useState(() => {
     if (!lost)
       return [] as Array<{
         id: number;
@@ -225,11 +242,11 @@ function PostGame({ status, agent, moves, onExit, onRematch }: PostGameProps) {
     <div className="ar-post">
       <div className="ar-post-backdrop" />
       {lost && (
-        <div className="ar-laugh-rain" aria-hidden="true">
-          {laughs.map((l) => (
+        <div className="ar-emoji-rain" aria-hidden="true">
+          {drops.map((l) => (
             <span
               key={l.id}
-              className="ar-laugh"
+              className="ar-emoji-drop"
               style={
                 {
                   left: l.left + "%",
@@ -241,7 +258,7 @@ function PostGame({ status, agent, moves, onExit, onRematch }: PostGameProps) {
                 } as React.CSSProperties
               }
             >
-              😂
+              {lossEmoji}
             </span>
           ))}
         </div>

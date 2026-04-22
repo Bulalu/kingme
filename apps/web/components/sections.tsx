@@ -215,6 +215,36 @@ export function Marquee() {
 export function Roster() {
   const agents = [
     {
+      id: "masaki",
+      img: "/assets/masaki.png",
+      name: "MASAKI",
+      tagline: "the closer",
+      game: "Checkers",
+      status: "live" as const,
+      elo: "2,211",
+      games: "9,402",
+      winRate: "91.4%",
+      params: "61M",
+      version: "v0.6",
+      bio: "Masaki doesn't perform. She closes. You get one loose diagonal, one lazy king path, and suddenly the room is hers.",
+      style: "clinical · punishes drift",
+    },
+    {
+      id: "tabata",
+      img: "/assets/tabata.png",
+      name: "TABATA",
+      tagline: "the landlord",
+      game: "Checkers",
+      status: "live" as const,
+      elo: "1,984",
+      games: "6,188",
+      winRate: "87.2%",
+      params: "61M",
+      version: "v0.4",
+      bio: "Tokea uswazi siachi ukoko. Tokea mageto huu ndo mtoko, matendo sina ropo ropo.",
+      style: "patient · owns the tempo",
+    },
+    {
       id: "sinza",
       img: "/assets/sinza.webp",
       name: "SINZA",
@@ -227,7 +257,6 @@ export function Roster() {
       params: "61M",
       version: "v1",
       bio: "Sinza is here for the audience, not the game. He'll let you king him just to make the comeback uglier. He's never lost a rematch. He's never offered one either.",
-      quote: '"king me, then king me again. i can wait."',
       style: "aggressive · loves forced captures",
     },
     {
@@ -235,30 +264,28 @@ export function Roster() {
       img: "/assets/manzese.webp",
       name: "MZE MANZESE",
       tagline: "the old man",
-      game: "Checkers · grandmaster",
+      game: "Checkers",
       status: "training" as const,
       elo: "—",
-      games: "2.1M",
-      winRate: "tbd",
-      params: "240M",
+      games: "—",
+      winRate: "—",
+      params: "61M",
       version: "v0.7",
-      bio: "Manzese has played the game longer than the game has been a game. He doesn't think. He remembers. Still in training. When he drops, Sinza gets nervous.",
-      quote:
-        '"the board is mine. the moves are mine. the win? always mine."',
-      style: "prophetic · never hurries",
+      bio: "Mze Manzese is back in the room, still reading the board like it owes him rent. He's in training for the next release.",
+      style: "in training · old-school pressure",
     },
   ];
   return (
-    <section className="km-section km-roster" data-screen-label="02 Agents">
+    <section className="km-section km-roster" data-screen-label="03 Agents">
       <SectionHead
-        kicker="the roster · 02 agents"
+        kicker="the roster · 04 agents"
         title={
           <>
             Pick your <span className="km-strike">agent</span>{" "}
             <span className="km-accent-text">loss.</span>
           </>
         }
-        sub="Every game on kingme gets its own agent — its own training run, its own personality, its own way of making you lose. Here are the first two."
+        sub="Every game on kingme gets its own agent — its own training run, its own personality, its own way of making you lose. Here are the first four."
       />
       <div className="km-roster-grid">
         {agents.map((a) => (
@@ -290,7 +317,7 @@ export function Roster() {
                 {a.status === "live" ? (
                   <Link
                     className="km-btn km-btn-primary km-btn-sm"
-                    href="/sinza"
+                    href={`/${a.id}`}
                   >
                     play {a.name.toLowerCase()} →
                   </Link>
@@ -315,7 +342,7 @@ export function Roadmap() {
       name: "Checkers",
       status: "live" as const,
       glyph: "◈",
-      agent: "sinza, manzese",
+      agent: "sinza, masaki, tabata",
       note: "live · play now",
     },
     {

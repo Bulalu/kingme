@@ -1,7 +1,7 @@
 {
   "id": "sinza",
   "display_name": "Sinza",
-  "description": "Current strongest owned release. Upgraded alpha-beta search running the April 19 strong-mode depth.",
+  "description": "Flagship Sinza release. Sharp reads, heavy pressure, built for serious games.",
   "engine": "alphabeta",
   "depth": 7,
   "quiescence": true,

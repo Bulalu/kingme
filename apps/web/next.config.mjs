@@ -6,6 +6,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
+  allowedDevOrigins: ["127.0.0.1", "localhost"],
   transpilePackages: ["@kingme/shared"],
   // Pin Turbopack to the monorepo root so it doesn't pick up an unrelated
   // lockfile elsewhere on disk.
