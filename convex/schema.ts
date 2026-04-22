@@ -125,6 +125,10 @@ export default defineSchema({
     stateBefore: engineState,
     stateAfter: engineState,
     latencyMs: v.number(),
+    // Optional in-character banter emitted by the model for this ply.
+    // null means the model explicitly chose silence; undefined covers
+    // legacy rows from before the v2 prompt was introduced.
+    say: v.optional(v.union(v.string(), v.null())),
     providerRequestId: v.optional(v.string()),
     rawOutput: v.optional(v.string()),
     usage: v.optional(

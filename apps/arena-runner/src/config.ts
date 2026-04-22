@@ -71,7 +71,7 @@ export async function loadProfile(path: string): Promise<ArenaProfile> {
     displayName: parsed.displayName,
     provider: parsed.provider ?? "openrouter",
     model: parsed.model,
-    promptVersion: parsed.promptVersion ?? "checkers-move-selection-v1",
+    promptVersion: parsed.promptVersion ?? "checkers-move-selection-v2",
     temperature: parsed.temperature ?? 0,
     maxOutputTokens: parsed.maxOutputTokens ?? 64,
     timeoutMs: parsed.timeoutMs ?? ARENA_DEFAULT_TURN_TIMEOUT_MS,

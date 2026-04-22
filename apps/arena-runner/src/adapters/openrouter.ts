@@ -5,6 +5,8 @@ import type {
   ArenaPromptInput,
 } from "@kingme/shared/arena-prompt";
 
+import { ARENA_MAX_SAY_CHARS } from "@kingme/shared/arena-prompt";
+
 import {
   arenaMoveOutputJsonSchema,
   buildChatMessages,
@@ -58,8 +60,16 @@ interface ChatCompletionResponse {
   };
 }
 
-function parseMovePdn(raw: string): string {
-  // Happy path: the whole content is strict JSON.
+interface ParsedModelOutput {
+  movePdn: string;
+  say: string | null;
+}
+
+// Lenient parser. `say` is defence-in-depth — the JSON schema already
+// caps length on the provider side, but models that ignore strict mode
+// can send back anything, and we normalize here: absent -> null, empty
+// string -> null, over-long -> truncated.
+function parseArenaOutput(raw: string): ParsedModelOutput {
   const trimmed = raw.trim();
   const tryParse = (s: string): ArenaModelOutput | null => {
     try {
@@ -70,7 +80,11 @@ function parseMovePdn(raw: string): string {
         "move_pdn" in obj &&
         typeof (obj as Record<string, unknown>).move_pdn === "string"
       ) {
-        return obj as ArenaModelOutput;
+        const rec = obj as Record<string, unknown>;
+        const sayVal = rec.say;
+        const say =
+          typeof sayVal === "string" && sayVal.length > 0 ? sayVal : null;
+        return { move_pdn: rec.move_pdn as string, say };
       }
     } catch {
       // fall through
@@ -78,15 +92,23 @@ function parseMovePdn(raw: string): string {
     return null;
   };
 
+  const from = (parsed: ArenaModelOutput): ParsedModelOutput => ({
+    movePdn: parsed.move_pdn,
+    say:
+      parsed.say === null
+        ? null
+        : parsed.say.slice(0, ARENA_MAX_SAY_CHARS),
+  });
+
   const direct = tryParse(trimmed);
-  if (direct) return direct.move_pdn;
+  if (direct) return from(direct);
 
   // Fallback: first {...} block in the string.
   const start = trimmed.indexOf("{");
   const end = trimmed.lastIndexOf("}");
   if (start !== -1 && end > start) {
     const fromBraces = tryParse(trimmed.slice(start, end + 1));
-    if (fromBraces) return fromBraces.move_pdn;
+    if (fromBraces) return from(fromBraces);
   }
 
   throw new OpenRouterProtocolError("model output is not valid arena JSON", raw);
@@ -154,10 +176,11 @@ export function createOpenRouterAdapter(
 
         const data = (await res.json()) as ChatCompletionResponse;
         const content = data.choices?.[0]?.message?.content ?? "";
-        const movePdn = parseMovePdn(content);
+        const { movePdn, say } = parseArenaOutput(content);
 
         return {
           movePdn,
+          say,
           latencyMs,
           rawOutput: content,
           providerRequestId: data.id,

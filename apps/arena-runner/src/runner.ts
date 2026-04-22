@@ -281,6 +281,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
         stateBefore,
         stateAfter: applied.state,
         latencyMs: selection.latencyMs,
+        say: selection.say,
         providerRequestId: selection.providerRequestId,
         rawOutput: selection.rawOutput,
         usage: selection.usage,
@@ -302,6 +303,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
             stateBefore: ply.stateBefore,
             stateAfter: ply.stateAfter,
             latencyMs: ply.latencyMs,
+            say: ply.say ?? null,
             providerRequestId: ply.providerRequestId,
             rawOutput: ply.rawOutput,
             usage: ply.usage,
@@ -311,7 +313,8 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
         }
       }
 
-      log(`  -> ${applied.applied_move.pdn} (${selection.latencyMs}ms)`);
+      const sayStr = selection.say ? ` | "${selection.say}"` : "";
+      log(`  -> ${applied.applied_move.pdn} (${selection.latencyMs}ms)${sayStr}`);
     }
 
     if (status === "running") {
