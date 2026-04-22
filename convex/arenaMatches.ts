@@ -168,6 +168,26 @@ export const setVisibility = internalMutation({
   },
 });
 
+// Attach or clear commissioned poster art for a matchup. Pass null to
+// remove. Same narrow-patch posture as setVisibility — this is an
+// admin hook, not a general match editor.
+export const setCardUrl = internalMutation({
+  args: {
+    matchId: v.string(),
+    cardUrl: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, { matchId, cardUrl }) => {
+    const match = await ctx.db
+      .query("arenaMatches")
+      .withIndex("by_matchId", (q) => q.eq("matchId", matchId))
+      .unique();
+    if (!match) throw new Error(`arena match ${matchId} not found`);
+    await ctx.db.patch(match._id, {
+      cardUrl: cardUrl ?? undefined,
+    });
+  },
+});
+
 // Recent matches, newest first. `limit` caps at 100 to keep list views
 // cheap; pagination comes later with a cursor-based variant if needed.
 // `visibility` filters to public rows for (future) public listings; when
