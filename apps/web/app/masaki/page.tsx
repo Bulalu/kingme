@@ -7,5 +7,5 @@ export const metadata: Metadata = {
 };
 
 export default function MasakiPage() {
-  return <Arena agentId="masaki" boardStyle="emerald" />;
+  return <Arena agentId="masaki" boardStyle="rose" />;
 }

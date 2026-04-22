@@ -89,6 +89,14 @@ const BOARD_STYLES: Record<string, BoardStyle> = {
     frame2: "#3a2414",
     pieceDark: "ink",
   },
+  rose: {
+    label: "rose velvet",
+    light: "#f2d7de",
+    dark: "#8f4f69",
+    frame: "#241116",
+    frame2: "#512433",
+    pieceDark: "ink",
+  },
 };
 
 interface MoveLog {

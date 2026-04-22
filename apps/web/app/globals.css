@@ -814,14 +814,10 @@ button { font: inherit; cursor: pointer; border: 0; background: transparent; col
   text-wrap: pretty;
 }
 .km-agent-quote {
-  font-family: var(--serif);
-  font-style: italic;
-  font-size: 17px;
-  line-height: 1.35;
-  color: var(--fg);
-  padding: 12px 14px;
-  border-left: 2px solid var(--accent);
-  background: var(--bg-3);
+  font-size: 14.5px;
+  line-height: 1.55;
+  color: var(--fg-dim);
+  margin: 0;
 }
 .km-agent-foot {
   display: flex;

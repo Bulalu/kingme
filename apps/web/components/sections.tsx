@@ -215,22 +215,6 @@ export function Marquee() {
 export function Roster() {
   const agents = [
     {
-      id: "sinza",
-      img: "/assets/sinza.webp",
-      name: "SINZA",
-      tagline: "the showman",
-      game: "Checkers",
-      status: "live" as const,
-      elo: "2,418",
-      games: "41,287",
-      winRate: "96.9%",
-      params: "61M",
-      version: "v1",
-      bio: "Sinza is here for the audience, not the game. He'll let you king him just to make the comeback uglier. He's never lost a rematch. He's never offered one either.",
-      quote: '"king me, then king me again. i can wait."',
-      style: "aggressive · loves forced captures",
-    },
-    {
       id: "masaki",
       img: "/assets/masaki.png",
       name: "MASAKI",
@@ -243,8 +227,6 @@ export function Roster() {
       params: "61M",
       version: "v0.6",
       bio: "Masaki doesn't perform. She closes. You get one loose diagonal, one lazy king path, and suddenly the room is hers.",
-      quote:
-        '"you saw the move. you just saw it too late."',
       style: "clinical · punishes drift",
     },
     {
@@ -260,9 +242,22 @@ export function Roster() {
       params: "61M",
       version: "v0.4",
       bio: "Tokea uswazi siachi ukoko. Tokea mageto huu ndo mtoko, matendo sina ropo ropo.",
-      quote:
-        '"Tokea uswazi siachi ukoko. Tokea mageto huu ndo mtoko, matendo sina ropo ropo."',
       style: "patient · owns the tempo",
+    },
+    {
+      id: "sinza",
+      img: "/assets/sinza.webp",
+      name: "SINZA",
+      tagline: "the showman",
+      game: "Checkers",
+      status: "live" as const,
+      elo: "2,418",
+      games: "41,287",
+      winRate: "96.9%",
+      params: "61M",
+      version: "v1",
+      bio: "Sinza is here for the audience, not the game. He'll let you king him just to make the comeback uglier. He's never lost a rematch. He's never offered one either.",
+      style: "aggressive · loves forced captures",
     },
     {
       id: "manzese",
@@ -277,8 +272,6 @@ export function Roster() {
       params: "61M",
       version: "v0.7",
       bio: "Mze Manzese is back in the room, still reading the board like it owes him rent. He's in training for the next release.",
-      quote:
-        '"training"',
       style: "in training · old-school pressure",
     },
   ];
@@ -319,7 +312,6 @@ export function Roster() {
                 <div className="km-agent-version">{a.version}</div>
               </div>
               <p className="km-agent-bio">{a.bio}</p>
-              <div className="km-agent-quote">{a.quote}</div>
               <div className="km-agent-foot">
                 <span className="km-agent-style">{a.style}</span>
                 {a.status === "live" ? (
