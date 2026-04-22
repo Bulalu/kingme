@@ -5,9 +5,9 @@
    ═══════════════════════════════════════════════════════════════ */
 
 .arena-page {
-  max-width: 1080px;
+  max-width: 1680px;
   margin: 0 auto;
-  padding: 72px 24px 160px;
+  padding: 72px clamp(24px, 3vw, 56px) 160px;
   position: relative;
 }
 
@@ -18,10 +18,10 @@
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
-  height: 520px;
+  height: 560px;
   background: radial-gradient(
-    ellipse 900px 520px at 30% 10%,
-    rgba(255, 180, 61, 0.08),
+    ellipse 1100px 560px at 30% 10%,
+    rgba(255, 180, 61, 0.09),
     transparent 70%
   );
   pointer-events: none;
@@ -241,8 +241,8 @@
 
 .undercard-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-  gap: 20px;
+  grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+  gap: 24px;
 }
 
 .undercard-empty {
@@ -508,6 +508,99 @@
 .uc-result {
   color: var(--fg);
   font-weight: 600;
+}
+
+/* ── Poster-backed undercard card ──────────────────────────── */
+
+.uc-card--poster {
+  padding: 0;
+  min-height: 280px;
+  aspect-ratio: 1 / 1;
+  background: var(--bg-2);
+  border: 1px solid rgba(255, 180, 61, 0.22);
+}
+
+.uc-card--poster::after {
+  /* Suppress the generic bottom vignette — we have our own scrim. */
+  display: none;
+}
+
+.uc-card--poster:hover {
+  border-color: rgba(255, 180, 61, 0.55);
+}
+
+.uc-card--poster:hover .uc-poster-img {
+  transform: scale(1.04);
+}
+
+.uc-poster-img {
+  object-fit: cover;
+  transition: transform 500ms cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.uc-poster-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+  background:
+    linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, transparent 22%),
+    linear-gradient(0deg, rgba(11, 9, 8, 0.9) 0%, transparent 45%);
+}
+
+.uc-poster-top {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  right: 16px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  z-index: 2;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.uc-poster-top .uc-status {
+  /* Slightly stronger contrast over poster art */
+  background: rgba(11, 9, 8, 0.8);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+}
+
+.uc-poster-top .uc-when {
+  color: rgba(244, 235, 224, 0.7);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
+}
+
+.uc-poster-footer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 16px 20px 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  z-index: 2;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: var(--fg);
+  border-top: 1px solid rgba(255, 180, 61, 0.22);
+}
+
+.uc-poster-result {
+  font-weight: 600;
+  text-shadow: 0 1px 4px rgba(0, 0, 0, 0.6);
+}
+
+.uc-poster-plies {
+  color: var(--fg-dim);
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.6);
 }
 
 /* ── Mobile adjustments ────────────────────────────────────── */

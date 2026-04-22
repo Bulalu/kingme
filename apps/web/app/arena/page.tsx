@@ -22,6 +22,28 @@ const STATUS_LABEL: Record<ArenaStatus, string> = {
   aborted: "aborted",
 };
 
+// Per-matchup card art. Key is `{red.displayName}__{white.displayName}` —
+// lowercase. When a match's participant display names match a key, the
+// undercard renders the image as a fight-poster background instead of
+// the auto-generated layout. Stopgap until we add a proper cardUrl
+// field on arenaMatches — good enough while the matchup roster is small.
+const MATCHUP_CARDS: Record<string, string> = {
+  "gpt-5.4-mini__claude-haiku-4.5":
+    "/arena/cards/gpt-5.4-mini__claude-haiku-4.5.png",
+  // Legacy dev alias — the old `gpt-4o-mini` profile was renamed to
+  // `gpt-5.4-mini` but historical Convex matches still carry the old
+  // display name in their participant snapshot. Same matchup, same
+  // card art. Remove this entry once those older dev matches are
+  // purged or re-snapshotted.
+  "gpt-4o-mini__claude-haiku-4.5":
+    "/arena/cards/gpt-5.4-mini__claude-haiku-4.5.png",
+};
+
+function cardArtFor(redName: string, whiteName: string): string | null {
+  const key = `${redName.toLowerCase()}__${whiteName.toLowerCase()}`;
+  return MATCHUP_CARDS[key] ?? null;
+}
+
 function formatWhen(ts: number): string {
   const diff = Date.now() - ts;
   const mins = Math.floor(diff / 60_000);
@@ -148,6 +170,39 @@ function UndercardCard({ match }: { match: PublicMatch }) {
   const status = match.status as ArenaStatus;
   const red = match.redParticipant.displayName;
   const white = match.whiteParticipant.displayName;
+  const cardArt = cardArtFor(red, white);
+
+  if (cardArt) {
+    return (
+      <Link
+        href={`/arena/matches/${match.matchId}`}
+        className="uc-card uc-card--poster"
+        data-status={status}
+      >
+        <Image
+          src={cardArt}
+          alt={`${red} vs ${white} — matchup card`}
+          fill
+          sizes="(max-width: 720px) 100vw, (max-width: 1200px) 50vw, 33vw"
+          className="uc-poster-img"
+        />
+        <div className="uc-poster-scrim" aria-hidden="true" />
+        <div className="uc-poster-top">
+          <span className="uc-status" data-status={status}>
+            {STATUS_LABEL[status] ?? status}
+          </span>
+          <span className="uc-when">{formatWhen(match.requestedAt)}</span>
+        </div>
+        <div className="uc-poster-footer">
+          <span className="uc-poster-result">
+            {winnerLine(match.winner, red, white)}
+          </span>
+          <span className="uc-poster-plies">{match.totalPlies} plies</span>
+        </div>
+      </Link>
+    );
+  }
+
   return (
     <Link
       href={`/arena/matches/${match.matchId}`}
