@@ -22,22 +22,6 @@ const STATUS_LABEL: Record<ArenaStatus, string> = {
   aborted: "aborted",
 };
 
-// Per-matchup card art. Key is `{red.displayName}__{white.displayName}`,
-// lowercase. Falls back to the auto-generated layout when a match isn't
-// mapped. Stopgap until we persist a cardUrl on arenaMatches directly.
-const MATCHUP_CARDS: Record<string, string> = {
-  "gpt-5.4-mini__claude-haiku-4.5":
-    "/arena/cards/gpt-5.4-mini__claude-haiku-4.5.png",
-  // Legacy dev alias — old `gpt-4o-mini` profile was renamed to
-  // `gpt-5.4-mini`. Remove once those older dev snapshots are rotated.
-  "gpt-4o-mini__claude-haiku-4.5":
-    "/arena/cards/gpt-5.4-mini__claude-haiku-4.5.png",
-};
-
-function cardArtFor(redName: string, whiteName: string): string | null {
-  const key = `${redName.toLowerCase()}__${whiteName.toLowerCase()}`;
-  return MATCHUP_CARDS[key] ?? null;
-}
 
 function formatWhen(ts: number): string {
   const diff = Date.now() - ts;
@@ -70,6 +54,7 @@ interface PublicMatch {
   totalPlies: number;
   redParticipant: { displayName: string; model: string };
   whiteParticipant: { displayName: string; model: string };
+  cardUrl: string | null;
 }
 
 export default function ArenaPage() {
@@ -167,7 +152,7 @@ function UndercardCard({ match }: { match: PublicMatch }) {
   const status = match.status as ArenaStatus;
   const red = match.redParticipant.displayName;
   const white = match.whiteParticipant.displayName;
-  const cardArt = cardArtFor(red, white);
+  const cardArt = match.cardUrl;
 
   if (cardArt) {
     return (

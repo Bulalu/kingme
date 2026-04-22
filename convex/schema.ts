@@ -108,6 +108,11 @@ export default defineSchema({
     engineVersion: v.union(v.string(), v.null()),
     errorSummary: v.union(v.string(), v.null()),
     visibility: arenaVisibility,
+    // Optional path to commissioned poster art for this matchup,
+    // relative to apps/web/public (e.g. "/arena/cards/foo.png"). When
+    // set, the undercard renders the poster as the card background;
+    // otherwise the card falls back to an auto-generated layout.
+    cardUrl: v.optional(v.string()),
   })
     .index("by_matchId", ["matchId"])
     .index("by_status_requestedAt", ["status", "requestedAt"])
