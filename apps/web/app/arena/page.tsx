@@ -34,15 +34,35 @@ function formatWhen(ts: number): string {
   return `${days}d ago`;
 }
 
-function winnerLine(
+type TerminationReason =
+  | "normal"
+  | "max_plies"
+  | "protocol_violation"
+  | "provider_timeout"
+  | "provider_error"
+  | "runner_error"
+  | "cancelled"
+  | null;
+
+// Renders the result line for a match card. When a match ended without
+// a winner, explain WHY — "no winner" alone reads like a draw, but the
+// reason is usually truncation (we hit the ply cap) or an operational
+// failure. Engine-decided draws get their own label.
+function resultLine(
+  status: ArenaStatus,
   winner: "red" | "white" | "draw" | null,
+  terminationReason: TerminationReason,
   red: string,
   white: string,
 ): string {
-  if (winner === null) return "no winner";
-  if (winner === "draw") return "draw";
   if (winner === "red") return `${red} won`;
-  return `${white} won`;
+  if (winner === "white") return `${white} won`;
+  if (winner === "draw") return "draw";
+  // winner === null
+  if (status === "failed") return "forfeit · protocol";
+  if (status === "aborted") return "aborted";
+  if (terminationReason === "max_plies") return "ply cap reached";
+  return "no winner";
 }
 
 interface PublicMatch {
@@ -50,6 +70,7 @@ interface PublicMatch {
   matchId: string;
   status: string;
   winner: "red" | "white" | "draw" | null;
+  terminationReason: TerminationReason;
   requestedAt: number;
   totalPlies: number;
   redParticipant: { displayName: string; model: string };
@@ -178,7 +199,7 @@ function UndercardCard({ match }: { match: PublicMatch }) {
         <div className="uc-poster-footer">
           <span className="uc-poster-plies">{match.totalPlies} plies</span>
           <span className="uc-poster-result">
-            {winnerLine(match.winner, red, white)}
+            {resultLine(status, match.winner, match.terminationReason, red, white)}
           </span>
         </div>
       </Link>
@@ -212,7 +233,9 @@ function UndercardCard({ match }: { match: PublicMatch }) {
       </div>
       <div className="uc-footer">
         <span className="uc-plies">{match.totalPlies} plies</span>
-        <span className="uc-result">{winnerLine(match.winner, red, white)}</span>
+        <span className="uc-result">
+          {resultLine(status, match.winner, match.terminationReason, red, white)}
+        </span>
       </div>
     </Link>
   );

@@ -40,15 +40,34 @@ function formatWhen(ts: number): string {
   return `${days}d ago`;
 }
 
-function winnerLine(
+type TerminationReason =
+  | "normal"
+  | "max_plies"
+  | "protocol_violation"
+  | "provider_timeout"
+  | "provider_error"
+  | "runner_error"
+  | "cancelled"
+  | null;
+
+// Match result label. winner+status+terminationReason together give a
+// much honester read than `winner` alone — a null winner on a maxed-
+// out match is "ply cap reached", not "no winner" (reads as draw), and
+// a failed match is a forfeit, not a null result.
+function resultLine(
+  status: ArenaStatus,
   winner: "red" | "white" | "draw" | null,
+  terminationReason: TerminationReason,
   red: string,
   white: string,
 ): string {
-  if (winner === null) return "no winner";
-  if (winner === "draw") return "draw";
   if (winner === "red") return `${red} won`;
-  return `${white} won`;
+  if (winner === "white") return `${white} won`;
+  if (winner === "draw") return "draw";
+  if (status === "failed") return "forfeit · protocol";
+  if (status === "aborted") return "aborted";
+  if (terminationReason === "max_plies") return "ply cap reached";
+  return "no winner";
 }
 
 interface ParticipantSnapshot {
@@ -146,7 +165,13 @@ export default function ArenaMatchPage({
             <span>{formatWhen(match.requestedAt)}</span>
             <span className="match-meta-dot">·</span>
             <span className="match-meta-result">
-              {winnerLine(match.winner, red, white)}
+              {resultLine(
+                status,
+                match.winner,
+                match.terminationReason as TerminationReason,
+                red,
+                white,
+              )}
             </span>
           </div>
         </div>
