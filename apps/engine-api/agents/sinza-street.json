@@ -1,9 +1,0 @@
-{
-  "id": "sinza-street",
-  "display_name": "Sinza Street",
-  "description": "Street-cut Sinza release. Same engine family, quicker reads, same pressure.",
-  "engine": "alphabeta",
-  "depth": 6,
-  "quiescence": true,
-  "public": true
-}

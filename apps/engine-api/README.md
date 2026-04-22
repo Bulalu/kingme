@@ -114,8 +114,8 @@ If you want a released checkpoint-backed bot on Modal later, add the checkpoint 
 Current released checkers lineup:
 
 - `sinza`
-- `sinza-street`
-- `sinza-pulse`
+- `masaki`
+- `tabata`
 
 These are released Sinza profiles served from the same production engine family. The older neural hybrid checkpoints are interesting, but they are not yet the strongest serving choice, so production stays on the search-backed engine path for now.
 

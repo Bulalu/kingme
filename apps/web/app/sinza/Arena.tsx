@@ -55,12 +55,19 @@ const AGENTS: Record<string, Agent> = {
     venue: "SINZA KIJIWENI",
     img: "/assets/sinza.webp",
   },
-  manzese: {
-    id: "manzese",
-    name: "MZE MANZESE",
-    tagline: "the old man",
-    venue: "MANZESE BACK OFFICE",
-    img: "/assets/manzese.webp",
+  masaki: {
+    id: "masaki",
+    name: "MASAKI",
+    tagline: "the closer",
+    venue: "MASAKI SOCIAL CLUB",
+    img: "/assets/masaki.png",
+  },
+  tabata: {
+    id: "tabata",
+    name: "TABATA",
+    tagline: "the landlord",
+    venue: "TABATA SUPPER ROOM",
+    img: "/assets/tabata.png",
   },
 };
 

@@ -231,34 +231,51 @@ export function Roster() {
       style: "aggressive · loves forced captures",
     },
     {
-      id: "manzese",
-      img: "/assets/manzese.webp",
-      name: "MZE MANZESE",
-      tagline: "the old man",
-      game: "Checkers · grandmaster",
-      status: "training" as const,
-      elo: "—",
-      games: "2.1M",
-      winRate: "tbd",
-      params: "240M",
-      version: "v0.7",
-      bio: "Manzese has played the game longer than the game has been a game. He doesn't think. He remembers. Still in training. When he drops, Sinza gets nervous.",
+      id: "masaki",
+      img: "/assets/masaki.png",
+      name: "MASAKI",
+      tagline: "the closer",
+      game: "Checkers",
+      status: "live" as const,
+      elo: "2,211",
+      games: "9,402",
+      winRate: "91.4%",
+      params: "61M",
+      version: "v0.6",
+      bio: "Masaki doesn't perform. She closes. You get one loose diagonal, one lazy king path, and suddenly the room is hers.",
       quote:
-        '"the board is mine. the moves are mine. the win? always mine."',
-      style: "prophetic · never hurries",
+        '"you saw the move. you just saw it too late."',
+      style: "clinical · punishes drift",
+    },
+    {
+      id: "tabata",
+      img: "/assets/tabata.png",
+      name: "TABATA",
+      tagline: "the landlord",
+      game: "Checkers",
+      status: "live" as const,
+      elo: "1,984",
+      games: "6,188",
+      winRate: "87.2%",
+      params: "61M",
+      version: "v0.4",
+      bio: "Tabata plays like the bar is already his and your seat is temporary. Relaxed face, rude board control, no free exits.",
+      quote:
+        "\"take your time. the trap is still there when you're done.\"",
+      style: "patient · owns the tempo",
     },
   ];
   return (
-    <section className="km-section km-roster" data-screen-label="02 Agents">
+    <section className="km-section km-roster" data-screen-label="03 Agents">
       <SectionHead
-        kicker="the roster · 02 agents"
+        kicker="the roster · 03 agents"
         title={
           <>
             Pick your <span className="km-strike">agent</span>{" "}
             <span className="km-accent-text">loss.</span>
           </>
         }
-        sub="Every game on kingme gets its own agent — its own training run, its own personality, its own way of making you lose. Here are the first two."
+        sub="Every game on kingme gets its own agent — its own training run, its own personality, its own way of making you lose. Here are the first three."
       />
       <div className="km-roster-grid">
         {agents.map((a) => (
@@ -290,7 +307,7 @@ export function Roster() {
                 {a.status === "live" ? (
                   <Link
                     className="km-btn km-btn-primary km-btn-sm"
-                    href="/sinza"
+                    href={`/${a.id}`}
                   >
                     play {a.name.toLowerCase()} →
                   </Link>
@@ -315,7 +332,7 @@ export function Roadmap() {
       name: "Checkers",
       status: "live" as const,
       glyph: "◈",
-      agent: "sinza, manzese",
+      agent: "sinza, masaki, tabata",
       note: "live · play now",
     },
     {

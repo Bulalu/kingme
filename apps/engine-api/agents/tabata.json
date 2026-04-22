@@ -1,0 +1,9 @@
+{
+  "id": "tabata",
+  "display_name": "Tabata",
+  "description": "Tabata plays like the room already belongs to him. Calm hand, sharp eye, no wasted moves.",
+  "engine": "alphabeta",
+  "depth": 4,
+  "quiescence": true,
+  "public": true
+}
