@@ -1,7 +1,7 @@
 import { readFile } from "node:fs/promises";
 import { resolve } from "node:path";
 
-import type { ArenaProfile } from "@kingme/shared/arena";
+import type { ArenaProfile, ArenaReasoning } from "@kingme/shared/arena";
 import { ARENA_DEFAULT_TURN_TIMEOUT_MS } from "@kingme/shared/arena-prompt";
 
 export interface RunnerEnv {
@@ -54,6 +54,7 @@ interface ProfileFile {
   temperature?: number;
   maxOutputTokens?: number;
   timeoutMs?: number;
+  reasoning?: ArenaReasoning;
   gameKey?: "checkers";
   variantKey?: "tanzanian-8x8";
 }
@@ -75,6 +76,7 @@ export async function loadProfile(path: string): Promise<ArenaProfile> {
     temperature: parsed.temperature ?? 0,
     maxOutputTokens: parsed.maxOutputTokens ?? 64,
     timeoutMs: parsed.timeoutMs ?? ARENA_DEFAULT_TURN_TIMEOUT_MS,
+    reasoning: parsed.reasoning,
     enabled: true,
     public: false,
     gameKey: parsed.gameKey ?? "checkers",
