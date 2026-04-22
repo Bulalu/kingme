@@ -1,167 +1,549 @@
+/* ═══════════════════════════════════════════════════════════════
+   /arena — fight-night venue layout
+   Main event poster above, auto-generated undercard cards below.
+   Arcade-noir family: black + warm paper + red + gold.
+   ═══════════════════════════════════════════════════════════════ */
+
 .arena-page {
-  max-width: 1040px;
+  max-width: 1080px;
   margin: 0 auto;
-  padding: 72px 24px 120px;
+  padding: 72px 24px 160px;
+  position: relative;
 }
 
-.arena-header {
-  margin-bottom: 56px;
-  max-width: 640px;
+.arena-page::before {
+  /* Warm spotlight behind the venue header — sits low-opacity so it
+     never competes with the poster below. Radial gradient out from
+     top-left, gold-tinted. */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 520px;
+  background: radial-gradient(
+    ellipse 900px 520px at 30% 10%,
+    rgba(255, 180, 61, 0.08),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+.arena-page > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ── Venue header ──────────────────────────────────────────── */
+
+.arena-venue {
+  margin-bottom: 72px;
+  max-width: 720px;
 }
 
 .arena-eyebrow {
   font-family: var(--mono);
   font-size: 12px;
-  letter-spacing: 0.18em;
+  letter-spacing: 0.22em;
   text-transform: uppercase;
-  color: var(--accent);
-  margin: 0 0 12px;
+  color: var(--accent-2);
+  margin: 0 0 20px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.arena-eyebrow::before,
+.arena-eyebrow::after {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: var(--accent-2);
+  opacity: 0.6;
 }
 
 .arena-title {
   font-family: var(--display);
-  font-size: clamp(40px, 7vw, 72px);
-  line-height: 1;
-  margin: 0 0 20px;
-  letter-spacing: -0.01em;
+  font-size: clamp(48px, 9vw, 96px);
+  line-height: 0.92;
+  letter-spacing: -0.015em;
+  margin: 0 0 24px;
   color: var(--fg);
+}
+
+.arena-title-break {
+  color: var(--fg-muted);
+  font-size: 0.55em;
+  letter-spacing: 0.04em;
+  vertical-align: 0.15em;
+}
+
+.arena-title-accent {
+  color: var(--accent-2);
+  font-style: italic;
 }
 
 .arena-sub {
   font-family: var(--serif);
-  font-size: 18px;
-  line-height: 1.55;
+  font-size: clamp(17px, 1.6vw, 20px);
+  line-height: 1.5;
   color: var(--fg-dim);
   margin: 0;
   font-style: italic;
 }
 
-.arena-list {
+/* ── Section divider ("main event" / "undercard") ─────────── */
+
+.arena-divider {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 28px;
+}
+
+.arena-divider-dash {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    transparent 0%,
+    var(--line) 20%,
+    var(--line) 80%,
+    transparent 100%
+  );
+}
+
+.arena-divider-label {
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.32em;
+  text-transform: uppercase;
+  color: var(--accent-2);
+  white-space: nowrap;
+}
+
+/* ── Main event poster ─────────────────────────────────────── */
+
+.main-event {
+  margin-bottom: 96px;
+}
+
+.main-event-card {
+  margin: 0;
+  position: relative;
+  border-radius: 2px;
+  overflow: hidden;
+  background: var(--bg-2);
+  border: 1px solid rgba(255, 180, 61, 0.22);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 30px 80px -20px rgba(0, 0, 0, 0.7),
+    0 10px 24px -8px rgba(0, 0, 0, 0.5);
+  transition: transform 300ms ease, box-shadow 300ms ease,
+    border-color 300ms ease;
+}
+
+.main-event-card:hover {
+  transform: translateY(-2px);
+  border-color: rgba(255, 180, 61, 0.45);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.4),
+    0 40px 100px -20px rgba(255, 75, 43, 0.18),
+    0 14px 30px -8px rgba(0, 0, 0, 0.6);
+}
+
+.main-event-poster {
+  display: block;
+  width: 100%;
+  height: auto;
+  object-fit: cover;
+}
+
+.main-event-scrim {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(to bottom, transparent 55%, rgba(11, 9, 8, 0.75) 100%),
+    radial-gradient(
+      ellipse 90% 70% at center 45%,
+      transparent,
+      rgba(11, 9, 8, 0.2) 90%
+    );
+}
+
+.main-event-meta {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  padding: 20px 28px 22px;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--mono);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fg);
+}
+
+.main-event-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  padding: 6px 14px 6px 10px;
+  background: rgba(11, 9, 8, 0.7);
+  border: 1px solid var(--accent-2);
+  color: var(--accent-2);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+}
+
+.main-event-pulse {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--accent-2);
+  box-shadow: 0 0 10px var(--accent-2);
+  animation: main-event-pulse 1800ms ease-in-out infinite;
+}
+
+@keyframes main-event-pulse {
+  0%,
+  100% {
+    transform: scale(0.85);
+    opacity: 0.7;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.main-event-divider {
+  color: var(--fg-muted);
+  font-weight: 400;
+}
+
+.main-event-detail {
+  color: var(--fg-dim);
+  letter-spacing: 0.18em;
+}
+
+/* ── Undercard grid ────────────────────────────────────────── */
+
+.undercard {
+  margin-bottom: 48px;
+}
+
+.undercard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+.undercard-empty {
+  font-family: var(--mono);
+  font-size: 13px;
+  color: var(--fg-muted);
+  text-align: center;
+  padding: 56px 24px;
+  background:
+    repeating-linear-gradient(
+      135deg,
+      transparent 0,
+      transparent 8px,
+      rgba(255, 255, 255, 0.015) 8px,
+      rgba(255, 255, 255, 0.015) 10px
+    ),
+    var(--bg-2);
+  border: 1px dashed var(--line);
+  margin: 0;
+  letter-spacing: 0.08em;
+}
+
+/* ── Undercard card ────────────────────────────────────────── */
+
+.uc-card {
+  position: relative;
   display: flex;
   flex-direction: column;
-  gap: 1px;
-  background: var(--line);
+  justify-content: space-between;
+  min-height: 240px;
+  padding: 22px 24px 20px;
+  background:
+    linear-gradient(
+      135deg,
+      rgba(255, 180, 61, 0.04) 0%,
+      transparent 40%
+    ),
+    var(--bg-2);
   border: 1px solid var(--line);
+  color: inherit;
+  text-decoration: none;
+  overflow: hidden;
+  transition: transform 240ms ease, border-color 240ms ease,
+    box-shadow 240ms ease, background 240ms ease;
+  isolation: isolate;
 }
 
-.arena-empty {
-  font-family: var(--mono);
-  font-size: 14px;
-  color: var(--fg-muted);
-  padding: 24px;
-  margin: 0;
-  background: var(--bg-2);
-  text-align: center;
+.uc-card::after {
+  /* Subtle vignette on the bottom — adds depth without noise */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 60%;
+  background: linear-gradient(
+    to bottom,
+    transparent,
+    rgba(0, 0, 0, 0.25)
+  );
+  pointer-events: none;
+  z-index: 0;
 }
 
-.arena-row {
+.uc-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.uc-card:hover {
+  transform: translateY(-3px);
+  border-color: rgba(255, 180, 61, 0.35);
+  box-shadow:
+    0 14px 30px -10px rgba(0, 0, 0, 0.6),
+    0 4px 14px -4px rgba(255, 75, 43, 0.18);
+}
+
+.uc-card[data-status="running"] {
+  border-color: rgba(255, 75, 43, 0.5);
+}
+
+.uc-card[data-status="running"]::before {
+  /* Red corner beacon for live matches */
+  content: "";
+  position: absolute;
+  top: -1px;
+  right: -1px;
+  width: 80px;
+  height: 80px;
+  background: radial-gradient(
+    circle at top right,
+    rgba(255, 75, 43, 0.35),
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Decorative piece chips in the card background */
+.uc-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.uc-chip {
+  position: absolute;
+  width: 110px;
+  height: 110px;
+  border-radius: 50%;
+  filter: blur(1px);
+  opacity: 0.06;
+}
+
+.uc-chip-red {
+  left: -40px;
+  top: -34px;
+  background: radial-gradient(
+    circle,
+    var(--red-piece) 0%,
+    var(--red-piece) 35%,
+    transparent 65%
+  );
+  opacity: 0.1;
+}
+
+.uc-chip-white {
+  right: -40px;
+  bottom: -40px;
+  background: radial-gradient(
+    circle,
+    #f0e8dc 0%,
+    #f0e8dc 35%,
+    transparent 65%
+  );
+  opacity: 0.07;
+}
+
+.uc-top {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 20px 24px;
-  background: var(--bg-2);
-  color: inherit;
-  text-decoration: none;
-  transition: background-color 120ms ease;
-  gap: 24px;
-  flex-wrap: wrap;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
 }
 
-.arena-row:hover {
-  background: var(--bg-3);
+.uc-status {
+  padding: 3px 10px;
+  border: 1px solid var(--line);
+  color: var(--fg-dim);
+  background: var(--bg);
+  font-weight: 600;
+  letter-spacing: 0.22em;
 }
 
-.arena-row-main {
+.uc-status[data-status="running"] {
+  color: var(--accent);
+  border-color: var(--accent);
+  background: rgba(255, 75, 43, 0.1);
+}
+
+.uc-status[data-status="completed"] {
+  color: var(--fg);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.uc-status[data-status="failed"],
+.uc-status[data-status="aborted"] {
+  color: var(--fg-muted);
+}
+
+.uc-when {
+  color: var(--fg-muted);
+}
+
+.uc-matchup {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
-  font-family: var(--display);
-  font-size: 22px;
-  letter-spacing: 0.02em;
+  margin: 14px 0 20px;
+}
+
+.uc-side {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
   min-width: 0;
 }
 
-.arena-side {
-  color: var(--fg);
+.uc-side-red {
+  text-align: left;
 }
 
-.arena-red::before {
+.uc-side-white {
+  text-align: right;
+}
+
+.uc-side-label {
+  font-family: var(--mono);
+  font-size: 10px;
+  letter-spacing: 0.24em;
+  text-transform: uppercase;
+  color: var(--fg-muted);
+}
+
+.uc-side-red .uc-side-label::before {
   content: "●";
   color: var(--red-piece);
-  margin-right: 8px;
-  font-size: 12px;
-  vertical-align: middle;
+  margin-right: 6px;
+  font-size: 9px;
+  vertical-align: 1px;
 }
 
-.arena-white::before {
+.uc-side-white .uc-side-label::after {
   content: "○";
   color: var(--fg-dim);
-  margin-right: 8px;
-  font-size: 12px;
-  vertical-align: middle;
+  margin-left: 6px;
+  font-size: 9px;
+  vertical-align: 1px;
 }
 
-.arena-vs {
-  color: var(--fg-muted);
-  font-family: var(--body);
-  font-size: 13px;
-  text-transform: uppercase;
-  letter-spacing: 0.12em;
-  font-weight: 500;
+.uc-side-name {
+  font-family: var(--display);
+  font-size: clamp(18px, 2.2vw, 22px);
+  letter-spacing: 0.01em;
+  color: var(--fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
-.arena-row-meta {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  font-family: var(--mono);
-  font-size: 12px;
-  color: var(--fg-dim);
+.uc-vs {
+  font-family: var(--serif);
+  font-style: italic;
+  font-size: 14px;
+  color: var(--accent-2);
   letter-spacing: 0.04em;
+  flex-shrink: 0;
+  padding: 2px 6px;
+}
+
+.uc-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-family: var(--mono);
+  font-size: 11px;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  flex-wrap: wrap;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
 }
 
-.arena-status {
-  padding: 4px 10px;
-  background: var(--bg);
-  border: 1px solid var(--line);
-  color: var(--fg-dim);
-}
-
-.arena-row[data-status="running"] .arena-status {
-  color: var(--accent);
-  border-color: var(--accent);
-}
-
-.arena-row[data-status="completed"] .arena-status {
-  color: var(--fg);
-}
-
-.arena-row[data-status="failed"] .arena-status,
-.arena-row[data-status="aborted"] .arena-status {
+.uc-plies {
   color: var(--fg-muted);
 }
 
-.arena-result {
+.uc-result {
   color: var(--fg);
+  font-weight: 600;
 }
 
-@media (max-width: 640px) {
+/* ── Mobile adjustments ────────────────────────────────────── */
+
+@media (max-width: 720px) {
   .arena-page {
-    padding: 40px 16px 80px;
+    padding: 48px 16px 100px;
   }
 
-  .arena-row {
-    padding: 16px;
+  .arena-venue {
+    margin-bottom: 48px;
   }
 
-  .arena-row-main {
-    font-size: 18px;
+  .main-event {
+    margin-bottom: 64px;
   }
 
-  .arena-row-meta {
-    gap: 12px;
-    font-size: 11px;
+  .main-event-meta {
+    padding: 14px 16px 16px;
+    font-size: 10px;
+    letter-spacing: 0.16em;
+    gap: 8px;
+  }
+
+  .main-event-status {
+    padding: 5px 10px 5px 8px;
+    font-size: 10px;
+  }
+
+  .undercard-grid {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .uc-card {
+    min-height: 200px;
+    padding: 18px 20px;
   }
 }
