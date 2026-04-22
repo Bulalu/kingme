@@ -108,6 +108,26 @@ export default defineSchema({
     engineVersion: v.union(v.string(), v.null()),
     errorSummary: v.union(v.string(), v.null()),
     visibility: arenaVisibility,
+    // Optional path to commissioned poster art for this matchup,
+    // relative to apps/web/public (e.g. "/arena/cards/foo.png"). When
+    // set, the undercard renders the poster as the card background;
+    // otherwise the card falls back to an auto-generated layout.
+    cardUrl: v.optional(v.string()),
+    // Optional series membership. When set, the undercard groups
+    // matches sharing the same series.id into a single scorecard
+    // block with numbered game cards underneath, rather than
+    // rendering each match as an independent card. gameIndex is the
+    // 1-based ordinal within the series; bestOf lets the UI render a
+    // "best of N" banner + decide when a series winner is determined;
+    // name is an optional human label ("Round 1", "Rematch", etc.).
+    series: v.optional(
+      v.object({
+        id: v.string(),
+        gameIndex: v.number(),
+        bestOf: v.optional(v.number()),
+        name: v.optional(v.string()),
+      }),
+    ),
   })
     .index("by_matchId", ["matchId"])
     .index("by_status_requestedAt", ["status", "requestedAt"])
@@ -125,6 +145,10 @@ export default defineSchema({
     stateBefore: engineState,
     stateAfter: engineState,
     latencyMs: v.number(),
+    // Optional in-character banter emitted by the model for this ply.
+    // null means the model explicitly chose silence; undefined covers
+    // legacy rows from before the v2 prompt was introduced.
+    say: v.optional(v.union(v.string(), v.null())),
     providerRequestId: v.optional(v.string()),
     rawOutput: v.optional(v.string()),
     usage: v.optional(

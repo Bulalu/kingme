@@ -111,6 +111,7 @@ export const appendPly = mutation({
     stateBefore: engineState,
     stateAfter: engineState,
     latencyMs: v.number(),
+    say: v.optional(v.union(v.string(), v.null())),
     providerRequestId: v.optional(v.string()),
     rawOutput: v.optional(v.string()),
     usage: v.optional(

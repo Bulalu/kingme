@@ -8,23 +8,49 @@
 import type { ApiColor, MovePayload, StatePayload } from "./engine";
 import type { ArenaProfile, ArenaTerminationReason, ArenaUsage } from "./arena";
 
-export const ARENA_PROMPT_VERSION = "checkers-move-selection-v1";
+export const ARENA_PROMPT_VERSION = "checkers-move-selection-v2";
+
+// Max length of the model's in-character commentary. Enforced by the
+// JSON schema on the provider side and by the parser as a defence in
+// depth. Models that want to stay silent return `"say": null`.
+export const ARENA_MAX_SAY_CHARS = 120;
+
+// One entry in the shared move history shown to both sides every turn.
+// The opponent's `say` is intentionally included — the arena is a
+// conversation as much as a game, and hiding the banter from the next
+// player strips context a human at the board would absolutely hear.
+// Both sides see the same history, so no fairness asymmetry.
+export interface ArenaMoveHistoryEntry {
+  side: ApiColor;
+  movePdn: string;
+  say: string | null;
+}
 
 export interface ArenaPromptInput {
   state: StatePayload;
   legalMoves: MovePayload[];
   sideToMove: ApiColor;
-  moveHistory: string[];
+  moveHistory: ArenaMoveHistoryEntry[];
   profile: ArenaProfile;
+  // When set, the runner is retrying a turn because the previous
+  // response failed validation. Prompt builders should surface this
+  // as an explicit correction directive so the model knows what to
+  // fix — just re-asking the same prompt tends to produce the same
+  // wrong answer.
+  retryFeedback?: string | null;
 }
 
-// The only structured output we accept from a model turn.
+// The only structured output we accept from a model turn. `say` is a
+// short optional taunt / chirp / regret line — null means "nothing to
+// say this turn", which we want the model to feel free to do.
 export interface ArenaModelOutput {
   move_pdn: string;
+  say: string | null;
 }
 
 export interface ArenaModelSelection {
   movePdn: string;
+  say: string | null;
   latencyMs: number;
   rawOutput?: string;
   providerRequestId?: string;
@@ -44,7 +70,7 @@ export interface ArenaModelAdapter {
 //   runner_error / internal crash   -> `failed`
 //
 // `aborted` and `failed` must NOT be counted toward standings.
-export const ARENA_MAX_REPAIR_ATTEMPTS = 1;
+export const ARENA_MAX_REPAIR_ATTEMPTS = 2;
 export const ARENA_MAX_PROVIDER_RETRIES = 1;
 export const ARENA_DEFAULT_TURN_TIMEOUT_MS = 30_000;
 export const ARENA_DEFAULT_MAX_PLIES = 300;

@@ -29,6 +29,20 @@ export type ArenaTerminationReason =
 
 export type ArenaVisibility = "private" | "public";
 
+// Reasoning / thinking budget forwarded to OpenRouter's `reasoning` field.
+// OpenRouter normalizes this across providers: `effort` maps to OpenAI's
+// reasoning_effort, `max_tokens` maps to Anthropic extended-thinking's
+// budget_tokens, `enabled: false` opts a model out of reasoning that
+// defaults on, `exclude: true` drops reasoning tokens from the response
+// (still billed). Profile authors set whichever combo their target model
+// supports; omitting the field uses OpenRouter's default.
+export interface ArenaReasoning {
+  effort?: "low" | "medium" | "high";
+  max_tokens?: number;
+  enabled?: boolean;
+  exclude?: boolean;
+}
+
 export interface ArenaProfile {
   profileId: string;
   displayName: string;
@@ -38,6 +52,7 @@ export interface ArenaProfile {
   temperature: number;
   maxOutputTokens: number;
   timeoutMs: number;
+  reasoning?: ArenaReasoning;
   enabled: boolean;
   public: boolean;
   gameKey: GameKey;
@@ -100,6 +115,7 @@ export interface ArenaPly {
   stateBefore: StatePayload;
   stateAfter: StatePayload;
   latencyMs: number;
+  say?: string | null;
   providerRequestId?: string;
   rawOutput?: string;
   usage?: ArenaUsage;

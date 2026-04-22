@@ -109,18 +109,18 @@ So if move latency is still high after warm-up, that is a search/runtime problem
 
 If you want a released checkpoint-backed bot on Modal later, add the checkpoint as a release artifact first, then point an agent manifest at its container path.
 
-## Live Product Agent
+## Live Product Agents
 
-The intended public launch agent is:
+Current released checkers ladder:
 
 - `sinza`
+  strongest owned release, upgraded `alphabeta`, `depth: 7`
+- `sinza-street`
+  lighter sparring tier, upgraded `alphabeta`, `depth: 6`
+- `sinza-rookie`
+  most approachable public tier, upgraded `alphabeta`, `depth: 4`
 
-Right now `sinza` is mapped to the strongest owned engine config we can defend from benchmark evidence:
-
-- upgraded `alphabeta`
-- `depth: 7`
-
-This is deliberate. The older neural hybrid checkpoints are interesting, but they are not yet the strongest serving choice. Until a checkpoint-backed release clearly beats the upgraded search engine, `sinza` should stay on the stronger engine.
+This is deliberate. The older neural hybrid checkpoints are interesting, but they are not yet the strongest serving choice. Until a checkpoint-backed release clearly beats the upgraded search engine, the public ladder should stay on the stronger search-backed engine family.
 
 ## Environment
 

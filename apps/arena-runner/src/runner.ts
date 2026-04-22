@@ -17,6 +17,7 @@ import type {
 import type {
   ArenaModelAdapter,
   ArenaModelSelection,
+  ArenaMoveHistoryEntry,
 } from "@kingme/shared/arena-prompt";
 import {
   ARENA_DEFAULT_MAX_PLIES,
@@ -75,15 +76,15 @@ async function selectWithRetry(
   input: Parameters<ArenaModelAdapter["selectMove"]>[0],
   log: (m: string) => void,
 ): Promise<ArenaModelSelection> {
-  let lastProtocolError: OpenRouterProtocolError | null = null;
   let providerAttempts = 0;
   let repairAttempts = 0;
+  let retryFeedback: string | null = null;
 
   // providerAttempts counts towards ARENA_MAX_PROVIDER_RETRIES (extra tries).
   // repairAttempts counts towards ARENA_MAX_REPAIR_ATTEMPTS for bad output.
   for (;;) {
     try {
-      const selection = await adapter.selectMove(input);
+      const selection = await adapter.selectMove({ ...input, retryFeedback });
       if (!legalPdns.has(selection.movePdn)) {
         if (repairAttempts >= ARENA_MAX_REPAIR_ATTEMPTS) {
           throw new OpenRouterProtocolError(
@@ -92,17 +93,26 @@ async function selectWithRetry(
           );
         }
         repairAttempts += 1;
+        retryFeedback = `you returned "${selection.movePdn}", which is NOT in the legal_moves list for this position. that move does not exist in the authoritative engine's legal set.`;
         log(`  repair attempt ${repairAttempts}: illegal move "${selection.movePdn}"`);
         continue;
       }
       return selection;
     } catch (err) {
       if (err instanceof OpenRouterProtocolError) {
-        lastProtocolError = err;
+        // Surface the raw model output so protocol violations are
+        // diagnosable from the transcript. Trim to keep the log tidy
+        // and fold newlines so a multi-line output stays on one line.
+        const preview = err.rawOutput
+          .slice(0, 280)
+          .replace(/\s+/g, " ")
+          .trim();
+        log(`  raw: ${preview || "(empty)"}`);
         if (repairAttempts >= ARENA_MAX_REPAIR_ATTEMPTS) {
           throw err;
         }
         repairAttempts += 1;
+        retryFeedback = `your previous response was not valid arena JSON and could not be parsed. respond with a single JSON object only — no markdown fences, no prose, no prefix/suffix.`;
         log(`  repair attempt ${repairAttempts}: ${err.message}`);
         continue;
       }
@@ -188,7 +198,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
   const initialState = await opts.engine.getInitialState();
   let state: StatePayload = initialState;
   const plies: ArenaPly[] = [];
-  const moveHistory: string[] = [];
+  const moveHistory: ArenaMoveHistoryEntry[] = [];
   let legal = await opts.engine.getLegalMoves(state);
   let winner = legal.winner;
 
@@ -281,13 +291,18 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
         stateBefore,
         stateAfter: applied.state,
         latencyMs: selection.latencyMs,
+        say: selection.say,
         providerRequestId: selection.providerRequestId,
         rawOutput: selection.rawOutput,
         usage: selection.usage,
         createdAt: Date.now(),
       };
       plies.push(ply);
-      moveHistory.push(applied.applied_move.pdn);
+      moveHistory.push({
+        side: sideToMove,
+        movePdn: applied.applied_move.pdn,
+        say: selection.say,
+      });
       opts.onPly?.(ply);
 
       if (persistence) {
@@ -302,6 +317,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
             stateBefore: ply.stateBefore,
             stateAfter: ply.stateAfter,
             latencyMs: ply.latencyMs,
+            say: ply.say ?? null,
             providerRequestId: ply.providerRequestId,
             rawOutput: ply.rawOutput,
             usage: ply.usage,
@@ -311,7 +327,8 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
         }
       }
 
-      log(`  -> ${applied.applied_move.pdn} (${selection.latencyMs}ms)`);
+      const sayStr = selection.say ? ` | "${selection.say}"` : "";
+      log(`  -> ${applied.applied_move.pdn} (${selection.latencyMs}ms)${sayStr}`);
     }
 
     if (status === "running") {

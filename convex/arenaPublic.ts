@@ -20,7 +20,14 @@ function toPublicMatch(m: ArenaMatchDoc) {
     errorSummary: _errorSummary,
     ...rest
   } = m;
-  return rest;
+  // Surface cardUrl + series explicitly so they're always present on
+  // the wire — either the value or null. Client code shouldn't have
+  // to distinguish "undefined on the doc" from "explicit null".
+  return {
+    ...rest,
+    cardUrl: m.cardUrl ?? null,
+    series: m.series ?? null,
+  };
 }
 
 function toPublicPly(p: ArenaPlyDoc) {
@@ -35,6 +42,9 @@ function toPublicPly(p: ArenaPlyDoc) {
     stateBefore: p.stateBefore,
     stateAfter: p.stateAfter,
     latencyMs: p.latencyMs,
+    // say is public-safe — it's a deliberate in-character line the
+    // model emitted as part of the game, not a debug trace.
+    say: p.say ?? null,
     createdAt: p.createdAt,
   };
 }

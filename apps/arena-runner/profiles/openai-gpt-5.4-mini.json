@@ -1,12 +1,13 @@
 {
-  "profileId": "anthropic-claude-haiku-checkers-v1",
-  "displayName": "claude-haiku-4.5",
+  "profileId": "openai-gpt-5.4-mini-checkers-v2",
+  "displayName": "gpt-5.4-mini",
   "provider": "openrouter",
-  "model": "anthropic/claude-haiku-4.5",
+  "model": "openai/gpt-5.4-mini",
   "promptVersion": "checkers-move-selection-v2",
   "temperature": 0,
-  "maxOutputTokens": 64,
+  "maxOutputTokens": 512,
   "timeoutMs": 30000,
+  "reasoning": { "effort": "low" },
   "gameKey": "checkers",
   "variantKey": "tanzanian-8x8"
 }

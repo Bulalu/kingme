@@ -149,6 +149,73 @@ export const finalize = internalMutation({
   },
 });
 
+// Flip a match's visibility. Admin-only: this is the hook an operator
+// uses to promote a private/manual match into the public viewer. Kept
+// as a narrow single-field patch so it cannot be used to rewrite
+// match state (use finalize for terminal transitions).
+export const setVisibility = internalMutation({
+  args: {
+    matchId: v.string(),
+    visibility: arenaVisibility,
+  },
+  handler: async (ctx, { matchId, visibility }) => {
+    const match = await ctx.db
+      .query("arenaMatches")
+      .withIndex("by_matchId", (q) => q.eq("matchId", matchId))
+      .unique();
+    if (!match) throw new Error(`arena match ${matchId} not found`);
+    await ctx.db.patch(match._id, { visibility });
+  },
+});
+
+// Attach or clear commissioned poster art for a matchup. Pass null to
+// remove. Same narrow-patch posture as setVisibility — this is an
+// admin hook, not a general match editor.
+export const setCardUrl = internalMutation({
+  args: {
+    matchId: v.string(),
+    cardUrl: v.union(v.string(), v.null()),
+  },
+  handler: async (ctx, { matchId, cardUrl }) => {
+    const match = await ctx.db
+      .query("arenaMatches")
+      .withIndex("by_matchId", (q) => q.eq("matchId", matchId))
+      .unique();
+    if (!match) throw new Error(`arena match ${matchId} not found`);
+    await ctx.db.patch(match._id, {
+      cardUrl: cardUrl ?? undefined,
+    });
+  },
+});
+
+// Attach or clear series membership on a match. Pass null for series
+// to remove. All matches sharing a series.id are rendered together as
+// one scorecard in the undercard.
+export const setSeries = internalMutation({
+  args: {
+    matchId: v.string(),
+    series: v.union(
+      v.object({
+        id: v.string(),
+        gameIndex: v.number(),
+        bestOf: v.optional(v.number()),
+        name: v.optional(v.string()),
+      }),
+      v.null(),
+    ),
+  },
+  handler: async (ctx, { matchId, series }) => {
+    const match = await ctx.db
+      .query("arenaMatches")
+      .withIndex("by_matchId", (q) => q.eq("matchId", matchId))
+      .unique();
+    if (!match) throw new Error(`arena match ${matchId} not found`);
+    await ctx.db.patch(match._id, {
+      series: series ?? undefined,
+    });
+  },
+});
+
 // Recent matches, newest first. `limit` caps at 100 to keep list views
 // cheap; pagination comes later with a cursor-based variant if needed.
 // `visibility` filters to public rows for (future) public listings; when
