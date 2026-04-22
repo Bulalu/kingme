@@ -2,6 +2,7 @@ import type { MovePayload, StatePayload } from "@kingme/shared/engine";
 import {
   ARENA_MAX_SAY_CHARS,
   ARENA_PROMPT_VERSION,
+  type ArenaMoveHistoryEntry,
   type ArenaPromptInput,
 } from "@kingme/shared/arena-prompt";
 
@@ -175,12 +176,23 @@ export function sortLegalMoves(moves: MovePayload[]): MovePayload[] {
   return [...moves].sort((a, b) => a.pdn.localeCompare(b.pdn));
 }
 
+function formatMoveHistory(entries: ArenaMoveHistoryEntry[]): string {
+  if (entries.length === 0) return "  (none yet)";
+  const recent = entries.slice(-20);
+  const sideWidth = 5; // "white"
+  const pdnWidth = Math.max(...recent.map((e) => e.movePdn.length));
+  return recent
+    .map((e) => {
+      const side = e.side.padEnd(sideWidth, " ");
+      const pdn = e.movePdn.padEnd(pdnWidth, " ");
+      const quote = e.say ? `   "${e.say}"` : "";
+      return `  ${side} — ${pdn}${quote}`;
+    })
+    .join("\n");
+}
+
 export function buildChatMessages(input: ArenaPromptInput): ChatMessage[] {
   const sorted = sortLegalMoves(input.legalMoves);
-  const historyBlock =
-    input.moveHistory.length === 0
-      ? "(none)"
-      : input.moveHistory.slice(-20).join(", ");
 
   const user = [
     `prompt_version: ${ARENA_PROMPT_VERSION}`,
@@ -188,7 +200,8 @@ export function buildChatMessages(input: ArenaPromptInput): ChatMessage[] {
     "",
     formatState(input.state),
     "",
-    `recent_moves: ${historyBlock}`,
+    `recent_moves (last ${Math.min(input.moveHistory.length, 20)}):`,
+    formatMoveHistory(input.moveHistory),
     "",
     `legal_moves (${sorted.length}):`,
     formatLegalMoves(sorted, input.state),

@@ -17,6 +17,7 @@ import type {
 import type {
   ArenaModelAdapter,
   ArenaModelSelection,
+  ArenaMoveHistoryEntry,
 } from "@kingme/shared/arena-prompt";
 import {
   ARENA_DEFAULT_MAX_PLIES,
@@ -188,7 +189,7 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
   const initialState = await opts.engine.getInitialState();
   let state: StatePayload = initialState;
   const plies: ArenaPly[] = [];
-  const moveHistory: string[] = [];
+  const moveHistory: ArenaMoveHistoryEntry[] = [];
   let legal = await opts.engine.getLegalMoves(state);
   let winner = legal.winner;
 
@@ -288,7 +289,11 @@ export async function runMatch(opts: RunMatchOptions): Promise<MatchResult> {
         createdAt: Date.now(),
       };
       plies.push(ply);
-      moveHistory.push(applied.applied_move.pdn);
+      moveHistory.push({
+        side: sideToMove,
+        movePdn: applied.applied_move.pdn,
+        say: selection.say,
+      });
       opts.onPly?.(ply);
 
       if (persistence) {

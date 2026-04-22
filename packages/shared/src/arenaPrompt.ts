@@ -15,11 +15,22 @@ export const ARENA_PROMPT_VERSION = "checkers-move-selection-v2";
 // depth. Models that want to stay silent return `"say": null`.
 export const ARENA_MAX_SAY_CHARS = 120;
 
+// One entry in the shared move history shown to both sides every turn.
+// The opponent's `say` is intentionally included — the arena is a
+// conversation as much as a game, and hiding the banter from the next
+// player strips context a human at the board would absolutely hear.
+// Both sides see the same history, so no fairness asymmetry.
+export interface ArenaMoveHistoryEntry {
+  side: ApiColor;
+  movePdn: string;
+  say: string | null;
+}
+
 export interface ArenaPromptInput {
   state: StatePayload;
   legalMoves: MovePayload[];
   sideToMove: ApiColor;
-  moveHistory: string[];
+  moveHistory: ArenaMoveHistoryEntry[];
   profile: ArenaProfile;
 }
 
