@@ -3,7 +3,7 @@
   "display_name": "Masaki",
   "description": "Masaki is all timing and pressure. She doesn't rush the board. She makes the board rush you.",
   "engine": "alphabeta",
-  "depth": 6,
+  "depth": 5,
   "quiescence": true,
   "public": true
 }
