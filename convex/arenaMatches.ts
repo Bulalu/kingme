@@ -188,6 +188,34 @@ export const setCardUrl = internalMutation({
   },
 });
 
+// Attach or clear series membership on a match. Pass null for series
+// to remove. All matches sharing a series.id are rendered together as
+// one scorecard in the undercard.
+export const setSeries = internalMutation({
+  args: {
+    matchId: v.string(),
+    series: v.union(
+      v.object({
+        id: v.string(),
+        gameIndex: v.number(),
+        bestOf: v.optional(v.number()),
+        name: v.optional(v.string()),
+      }),
+      v.null(),
+    ),
+  },
+  handler: async (ctx, { matchId, series }) => {
+    const match = await ctx.db
+      .query("arenaMatches")
+      .withIndex("by_matchId", (q) => q.eq("matchId", matchId))
+      .unique();
+    if (!match) throw new Error(`arena match ${matchId} not found`);
+    await ctx.db.patch(match._id, {
+      series: series ?? undefined,
+    });
+  },
+});
+
 // Recent matches, newest first. `limit` caps at 100 to keep list views
 // cheap; pagination comes later with a cursor-based variant if needed.
 // `visibility` filters to public rows for (future) public listings; when
