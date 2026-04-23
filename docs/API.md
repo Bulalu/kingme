@@ -52,7 +52,7 @@ The live engine currently serves the Tanzanian-style 8x8 variant used by the pro
   - repeated positions draw on the configured repetition count
   - games draw after the global quiet-move limit with no captures or promotions
   - bare king vs bare king draws immediately
-  - lone-king low-material endgames against at most three opposing pieces with an opposing king draw after the shorter low-material quiet-move limit
+  - lone-king low-material endgames against at most three opposing pieces with an opposing king draw after 20 quiet halfmoves
 
 Frontend code should treat all legality and landing-square generation as engine-owned behavior.
 

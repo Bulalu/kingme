@@ -32,6 +32,6 @@ CHECKERS_V2_RULESET = Ruleset(
     men_capture_backwards=False,
     repetition_draw_count=3,
     no_progress_draw_halfmoves=80,
-    low_material_draw_halfmoves=32,
+    low_material_draw_halfmoves=20,
     canonical_observation_shape=(8, 8, 8),
 )
