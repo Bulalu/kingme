@@ -167,6 +167,7 @@ Current endpoints:
 - `POST /v1/state/legal-moves`
 - `POST /v1/state/apply-move`
 - `POST /v1/agent-move`
+- `POST /v1/play-turn`
 
 Full request/response contract:
 
@@ -178,20 +179,17 @@ That is enough for:
 - applying state transitions
 - asking a bot for its reply
 
-## Recommendation For Product
+## Current Product Lineup
 
-For the first public release, use one agent:
+Current released checkers agents:
 
-- `sinza`
+- `sinza` — upgraded `alphabeta`, `depth 7`
+- `masaki` — upgraded `alphabeta`, `depth 5`
+- `tabata` — upgraded `alphabeta`, `depth 4`
 
-And point it at the strongest owned serving config, not the most experimental one.
-
-At the moment that means:
-
-- upgraded `alphabeta`
-- `depth 7`
+These are all served from the same stable search-backed runtime family.
 
 Reason:
 
-- benchmark evidence says the upgraded search engine is currently stronger than the older checkpoint-backed hybrid runtime we have on hand
+- benchmark evidence still favors the upgraded search engine over the older checkpoint-backed hybrid runtime we have on hand
 - the hybrid path stays in the lab until it clearly earns promotion

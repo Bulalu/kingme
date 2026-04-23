@@ -1,3 +1,4 @@
+import { getReleasedAgentCatalogEntry } from "@kingme/shared/agents";
 import { v } from "convex/values";
 import { internalMutation, mutation, query } from "./_generated/server";
 import { rateLimiter } from "./rateLimits";
@@ -17,15 +18,17 @@ export const start = mutation({
   args: {
     anonId: v.string(),
     agentId: v.string(),
-    agentDisplayName: v.string(),
   },
-  handler: async (ctx, { anonId, agentId, agentDisplayName }) => {
+  handler: async (ctx, { anonId, agentId }) => {
     await rateLimiter.limit(ctx, "startGame", { key: anonId, throws: true });
     const player = await ctx.db
       .query("players")
       .withIndex("by_anonId", (q) => q.eq("anonId", anonId))
       .unique();
     if (!player) throw new Error("player not found");
+
+    const releasedAgent = getReleasedAgentCatalogEntry(agentId);
+    if (!releasedAgent) throw new Error(`unknown released agent: ${agentId}`);
 
     // Lazy-seed agent row.
     const existingAgent = await ctx.db
@@ -35,12 +38,16 @@ export const start = mutation({
     if (!existingAgent) {
       await ctx.db.insert("agents", {
         agentId,
-        displayName: agentDisplayName,
+        displayName: releasedAgent.displayName,
         gamesPlayed: 0,
         wins: 0,
         losses: 0,
         draws: 0,
         totalMoves: 0,
+      });
+    } else if (existingAgent.displayName !== releasedAgent.displayName) {
+      await ctx.db.patch(existingAgent._id, {
+        displayName: releasedAgent.displayName,
       });
     }
 
@@ -73,7 +80,7 @@ export const start = mutation({
 
 // Mark a game as finished and bump denormalized counters on the player and
 // agent. `winner` is from the perspective of the human:
-//   "human" = player won, "agent" = sinza won, "draw" = neither.
+//   "human" = player won, "agent" = released agent won, "draw" = neither.
 //
 // anonId is checked against the game's player to prevent a client from
 // completing someone else's game with a scraped gameId.

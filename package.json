@@ -13,6 +13,7 @@
     "convex": "^1.35.1"
   },
   "dependencies": {
+    "@kingme/shared": "workspace:*",
     "@convex-dev/rate-limiter": "^0.3.2"
   }
 }

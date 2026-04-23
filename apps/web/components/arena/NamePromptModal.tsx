@@ -30,7 +30,7 @@ export default function NamePromptModal({
         <div className="ar-name-kicker">before you sit down</div>
         <h2 className="ar-name-title">what should we call you?</h2>
         <p className="ar-name-sub">
-          shows up on the leaderboard when you beat sinza. or doesn&apos;t.
+          shows up on the leaderboard when you steal a win. or doesn&apos;t.
         </p>
         <input
           autoFocus

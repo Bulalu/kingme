@@ -2,10 +2,9 @@ import { v } from "convex/values";
 import { query } from "./_generated/server";
 
 // Agents are lazy-seeded inline by games.start on the first call for a new
-// agentId — there's no public mutation to insert agent rows. This keeps
-// agentId + displayName server-authoritative (derived from the call that
-// opens an actual game) instead of client-controlled, and removes one more
-// public write surface a script could abuse.
+// released agentId — there's no public mutation to insert agent rows. The
+// displayName comes from the server-side released-agent catalog, not from
+// the browser, which keeps identity metadata authoritative and consistent.
 
 export const getByAgentId = query({
   args: { agentId: v.string() },

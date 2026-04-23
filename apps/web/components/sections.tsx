@@ -9,6 +9,14 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import Board from "./Board";
+import {
+  AGENT_ROSTER,
+  FEATURED_AGENT,
+  PLAYABLE_AGENTS,
+  getAgentPath,
+  type PlayableAgentId,
+  type PlayableAgentProfile,
+} from "@/lib/agents";
 
 // ── Hero ───────────────────────────────────────────────────────
 export interface HeroProps {
@@ -29,20 +37,58 @@ function fmtPct(n: number, d: number) {
   return pct >= 10 ? `${pct.toFixed(0)}%` : `${pct.toFixed(1)}%`;
 }
 
+interface AgentStats {
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  totalMoves: number;
+}
+
+function slotNumber(i: number) {
+  return (i + 1).toString().padStart(2, "0");
+}
+
+function winPctValue(stats: AgentStats | undefined) {
+  if (!stats || stats.gamesPlayed <= 0) return 0;
+  return Math.round((stats.wins / stats.gamesPlayed) * 100);
+}
+
 export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
-  // Live agent counters from Convex. Falls back to hardcoded copy until
-  // the first game is recorded (or while the query is loading).
-  const sinzaStats = useQuery(api.agents.getByAgentId, { agentId: "sinza" });
-  const sinzaGames = sinzaStats ? fmtInt(sinzaStats.gamesPlayed) : "0";
-  const sinzaWinRate =
-    sinzaStats && sinzaStats.gamesPlayed > 0
-      ? fmtPct(sinzaStats.wins, sinzaStats.gamesPlayed)
+  // One Convex round-trip for all live agents; map by agentId for cheap lookup.
+  const allAgentStats = useQuery(api.agents.list, {});
+  const statsById = useMemo(() => {
+    const map = new Map<string, AgentStats>();
+    if (allAgentStats) {
+      for (const row of allAgentStats) {
+        map.set(row.agentId, {
+          gamesPlayed: row.gamesPlayed,
+          wins: row.wins,
+          losses: row.losses,
+          totalMoves: row.totalMoves,
+        });
+      }
+    }
+    return map;
+  }, [allAgentStats]);
+
+  const [activeAgentId, setActiveAgentId] = useState<PlayableAgentId>(
+    FEATURED_AGENT.id,
+  );
+  const activeAgent: PlayableAgentProfile =
+    PLAYABLE_AGENTS.find((a) => a.id === activeAgentId) ?? FEATURED_AGENT;
+  const activeStats = statsById.get(activeAgent.id);
+  const activeGames = activeStats ? fmtInt(activeStats.gamesPlayed) : "0";
+  const activeWinRate =
+    activeStats && activeStats.gamesPlayed > 0
+      ? fmtPct(activeStats.wins, activeStats.gamesPlayed)
       : "—";
   const humansWonRate =
-    sinzaStats && sinzaStats.gamesPlayed > 0
-      ? fmtPct(sinzaStats.losses, sinzaStats.gamesPlayed)
+    activeStats && activeStats.gamesPlayed > 0
+      ? fmtPct(activeStats.losses, activeStats.gamesPlayed)
       : "—";
-  const totalMoves = sinzaStats ? fmtInt(sinzaStats.totalMoves) : "—";
+  const totalMoves = activeStats ? fmtInt(activeStats.totalMoves) : "—";
+  const activeWinPct = winPctValue(activeStats);
+  const activeAgentLabel = activeAgent.displayName.toLowerCase();
   const taunts: Record<
     string,
     {
@@ -55,19 +101,19 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
     }
   > = {
     cocky: {
-      kicker: "meet sinza · your first problem",
+      kicker: `meet ${activeAgentLabel} · your first problem`,
       line1: "KING",
       line2: "ME.",
       sub: "AI agents that trained themselves. Now they're looking for a game.",
-      cta: "play sinza",
-      cta2: "watch him play himself",
+      cta: `play ${activeAgentLabel}`,
+      cta2: "watch them play themselves",
     },
     dry: {
-      kicker: "sinza · checkers agent · v3",
+      kicker: `${activeAgentLabel} · checkers agent · ${activeAgent.version}`,
       line1: "PLAY",
-      line2: "SINZA.",
+      line2: `${activeAgent.name}.`,
       sub: "Trained from scratch on self-play. No opening books, no lookup tables — just a network that taught itself checkers.",
-      cta: "play sinza",
+      cta: `play ${activeAgentLabel}`,
       cta2: "watch demo",
     },
   };
@@ -88,7 +134,10 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <p className="km-hero-sub">{t.sub}</p>
 
           <div className="km-hero-ctas">
-            <Link className="km-btn km-btn-primary" href="/sinza">
+            <Link
+              className="km-btn km-btn-primary"
+              href={getAgentPath(activeAgentId)}
+            >
               {`▶ ${t.cta}`}
             </Link>
             <button
@@ -104,46 +153,140 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           </div>
 
           <div className="km-hero-meta">
-            <Stat label="games played vs bot" value={sinzaGames} />
+            <Stat label="games played vs bot" value={activeGames} />
             <Stat label="humans who won" value={humansWonRate} />
-            <Stat label="moves he's made" value={totalMoves} />
+            <Stat label="moves made" value={totalMoves} />
           </div>
         </div>
 
         <div className="km-hero-right">
-          <div className="km-hero-opponent">
-            <div className="km-opp-portrait">
-              <Image
-                src="/assets/sinza.webp"
-                alt="Sinza"
-                fill
-                sizes="88px"
-                priority
-              />
-              <div className="km-opp-badge">● LIVE</div>
-            </div>
-            <div className="km-opp-meta">
-              <div className="km-opp-label">your opponent</div>
-              <div className="km-opp-name">SINZA</div>
-              <div className="km-opp-stats">
-                <span>
-                  <b>{sinzaGames}</b> games
+          <div className="km-dossier">
+            <div className="km-dossier-active">
+              <div
+                className="km-slot-ledger"
+                key={`slot-${activeAgent.id}`}
+              >
+                <span className="km-slot-num km-slot-num-active">
+                  {slotNumber(
+                    PLAYABLE_AGENTS.findIndex((a) => a.id === activeAgent.id),
+                  )}
                 </span>
-                <span>·</span>
-                <span>
-                  <b>{sinzaWinRate}</b> win rate
-                </span>
+                <span className="km-slot-tick" />
               </div>
-              <div className="km-opp-quote">&ldquo;njoo tuzinese wewe.....&rdquo;</div>
+              <div
+                className="km-swap km-swap-portrait"
+                key={`portrait-${activeAgent.id}`}
+              >
+                <div className="km-opp-portrait">
+                  <Image
+                    src={activeAgent.img}
+                    alt={activeAgent.displayName}
+                    fill
+                    sizes="88px"
+                    priority
+                  />
+                  <div className="km-opp-badge">● LIVE</div>
+                </div>
+              </div>
+              <div className="km-opp-meta">
+                <div className="km-opp-label">your opponent</div>
+                <div
+                  className="km-swap km-swap-text"
+                  key={`text-${activeAgent.id}`}
+                >
+                  <div className="km-opp-name">{activeAgent.name}</div>
+                  <div className="km-opp-stats">
+                    <span>
+                      <b>{activeGames}</b> games
+                    </span>
+                    <span>·</span>
+                    <span>
+                      <b>{activeWinRate}</b> win rate
+                    </span>
+                  </div>
+                </div>
+                <div className="km-winbar">
+                  <div
+                    className="km-winbar-fill"
+                    style={{ width: `${activeWinPct}%` }}
+                  />
+                </div>
+                <div
+                  className="km-swap km-swap-quote"
+                  key={`quote-${activeAgent.id}`}
+                >
+                  <div className="km-opp-quote">
+                    &ldquo;{activeAgent.taunt}&rdquo;
+                  </div>
+                </div>
+              </div>
+              <span className="km-now-tape">NOW PLAYING</span>
+            </div>
+
+            <div className="km-bench">
+              {PLAYABLE_AGENTS.filter((a) => a.id !== activeAgent.id).map(
+                (agent) => {
+                  const stats = statsById.get(agent.id);
+                  const games = stats ? fmtInt(stats.gamesPlayed) : "0";
+                  const wr =
+                    stats && stats.gamesPlayed > 0
+                      ? fmtPct(stats.wins, stats.gamesPlayed)
+                      : "—";
+                  const pct = winPctValue(stats);
+                  const slotIdx = PLAYABLE_AGENTS.findIndex(
+                    (a) => a.id === agent.id,
+                  );
+                  return (
+                    <button
+                      type="button"
+                      key={agent.id}
+                      className="km-bench-row"
+                      onClick={() => setActiveAgentId(agent.id)}
+                      aria-label={`promote ${agent.displayName} to active opponent`}
+                    >
+                      <span className="km-slot-num">{slotNumber(slotIdx)}</span>
+                      <div className="km-bench-portrait">
+                        <Image
+                          src={agent.img}
+                          alt={agent.displayName}
+                          fill
+                          sizes="48px"
+                        />
+                      </div>
+                      <div className="km-bench-meta">
+                        <div className="km-bench-name">{agent.name}</div>
+                        <div className="km-bench-stats">
+                          <span>{games}g</span>
+                          <span>·</span>
+                          <span>{wr}</span>
+                        </div>
+                        <div className="km-winbar km-winbar-bench">
+                          <div
+                            className="km-winbar-fill"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="km-bench-promote">↑ promote</span>
+                    </button>
+                  );
+                },
+              )}
             </div>
           </div>
+
           <div className="km-board-stage">
             <div className="km-board-chrome">
               <div className="km-chrome-row">
                 <span className="km-chrome-dot" />
                 <span className="km-chrome-dot" />
                 <span className="km-chrome-dot" />
-                <span className="km-chrome-title">kingme://sinza/live</span>
+                <span
+                  className="km-chrome-title km-chrome-flicker"
+                  key={`title-${activeAgent.id}`}
+                >
+                  {`kingme://${activeAgent.id}/live`}
+                </span>
                 <span className="km-chrome-badge">
                   {mode === "play" ? "● LIVE" : "● DEMO"}
                 </span>
@@ -151,12 +294,12 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
               <Board
                 key={mode}
                 mode={mode}
-                size={460}
+                size={420}
                 accent={accent}
                 demoSpeedMs={850}
               />
               <div className="km-board-footer">
-                <span>agent · sinza-v1 · 61M params</span>
+                <span>{`agent · ${activeAgent.id}-${activeAgent.version.toLowerCase()} · live engine`}</span>
                 <span>difficulty · hard</span>
               </div>
             </div>
@@ -213,68 +356,6 @@ export function Marquee() {
 
 // ── Roster (the agents) ────────────────────────────────────────
 export function Roster() {
-  const agents = [
-    {
-      id: "masaki",
-      img: "/assets/masaki.png",
-      name: "MASAKI",
-      tagline: "the closer",
-      game: "Checkers",
-      status: "live" as const,
-      elo: "2,211",
-      games: "9,402",
-      winRate: "91.4%",
-      params: "61M",
-      version: "v0.6",
-      bio: "Masaki doesn't perform. She closes. You get one loose diagonal, one lazy king path, and suddenly the room is hers.",
-      style: "clinical · punishes drift",
-    },
-    {
-      id: "tabata",
-      img: "/assets/tabata.png",
-      name: "TABATA",
-      tagline: "the landlord",
-      game: "Checkers",
-      status: "live" as const,
-      elo: "1,984",
-      games: "6,188",
-      winRate: "87.2%",
-      params: "61M",
-      version: "v0.4",
-      bio: "Tokea uswazi siachi ukoko. Tokea mageto huu ndo mtoko, matendo sina ropo ropo.",
-      style: "patient · owns the tempo",
-    },
-    {
-      id: "sinza",
-      img: "/assets/sinza.webp",
-      name: "SINZA",
-      tagline: "the showman",
-      game: "Checkers",
-      status: "live" as const,
-      elo: "2,418",
-      games: "41,287",
-      winRate: "96.9%",
-      params: "61M",
-      version: "v1",
-      bio: "Sinza is here for the audience, not the game. He'll let you king him just to make the comeback uglier. He's never lost a rematch. He's never offered one either.",
-      style: "aggressive · loves forced captures",
-    },
-    {
-      id: "manzese",
-      img: "/assets/manzese.webp",
-      name: "MZE MANZESE",
-      tagline: "the old man",
-      game: "Checkers",
-      status: "training" as const,
-      elo: "—",
-      games: "—",
-      winRate: "—",
-      params: "61M",
-      version: "v0.7",
-      bio: "Mze Manzese is back in the room, still reading the board like it owes him rent. He's in training for the next release.",
-      style: "in training · old-school pressure",
-    },
-  ];
   return (
     <section className="km-section km-roster" data-screen-label="03 Agents">
       <SectionHead
@@ -288,7 +369,7 @@ export function Roster() {
         sub="Every game on kingme gets its own agent — its own training run, its own personality, its own way of making you lose. Here are the first four."
       />
       <div className="km-roster-grid">
-        {agents.map((a) => (
+        {AGENT_ROSTER.map((a) => (
           <article key={a.id} className={"km-agent km-agent-" + a.status}>
             <div className="km-agent-portrait">
               <Image
@@ -317,7 +398,7 @@ export function Roster() {
                 {a.status === "live" ? (
                   <Link
                     className="km-btn km-btn-primary km-btn-sm"
-                    href={`/${a.id}`}
+                    href={getAgentPath(a.id)}
                   >
                     play {a.name.toLowerCase()} →
                   </Link>
@@ -399,8 +480,8 @@ export function Leaderboard() {
     >
       <SectionHead
         kicker="leaderboard"
-        title="Who's actually beaten him."
-        sub="Every human who's finished a game against sinza. The ones still at 0 wins are the evidence."
+        title="Who's actually won."
+        sub="Every human who's finished a game against a live kingme agent. The ones still at 0 wins are the evidence."
       />
       <div className="km-lb-wrap">
         <div className="km-lb-header">
@@ -476,7 +557,7 @@ export function Leaderboard() {
         {empty && (
           <Link
             className="km-btn km-btn-primary km-btn-sm"
-            href="/sinza"
+            href={getAgentPath(FEATURED_AGENT.id)}
           >
             be the first →
           </Link>

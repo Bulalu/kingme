@@ -1,9 +1,9 @@
 // Minimal legal-move engine — standard American checkers, 8x8, mandatory captures.
-// Used by the in-hero demo board AND the /sinza play view.
+// Used by the in-hero demo board and shared arena UI board rendering.
 //
-// IMPORTANT: this is a self-contained landing-page bot, NOT the live `sinza`
-// engine. The real engine lives at apps/engine-api and will eventually back
-// the arena via the documented API contract (see docs/API.md).
+// IMPORTANT: this is a self-contained landing-page bot, not the live engine.
+// The real engine lives at apps/engine-api and is the source of truth for the
+// arena via the documented API contract (see docs/API.md).
 
 export const EMPTY = 0;
 export const RED = 1;

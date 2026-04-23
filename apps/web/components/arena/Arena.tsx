@@ -11,6 +11,11 @@ import { useMutation, useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import type { Id } from "@convex/_generated/dataModel";
 import NamePromptModal from "./NamePromptModal";
+import {
+  BOARD_STYLES,
+  type BoardStyle,
+  type PlayableAgentProfile,
+} from "@/lib/agents";
 import { generateMemeName, getOrCreateAnonId } from "@/lib/identity";
 import {
   isBlack,
@@ -39,66 +44,6 @@ import {
   type StatePayload,
 } from "@/lib/engine";
 
-interface Agent {
-  id: string;
-  name: string;
-  tagline: string;
-  venue: string;
-  img: string;
-}
-
-const AGENTS: Record<string, Agent> = {
-  sinza: {
-    id: "sinza",
-    name: "SINZA",
-    tagline: "the showman",
-    venue: "SINZA KIJIWENI",
-    img: "/assets/sinza.webp",
-  },
-  masaki: {
-    id: "masaki",
-    name: "MASAKI",
-    tagline: "the closer",
-    venue: "MASAKI SOCIAL CLUB",
-    img: "/assets/masaki.png",
-  },
-  tabata: {
-    id: "tabata",
-    name: "TABATA",
-    tagline: "the landlord",
-    venue: "TABATA SUPPER ROOM",
-    img: "/assets/tabata.png",
-  },
-};
-
-interface BoardStyle {
-  label: string;
-  light: string;
-  dark: string;
-  frame: string;
-  frame2: string;
-  pieceDark: string;
-}
-
-const BOARD_STYLES: Record<string, BoardStyle> = {
-  emerald: {
-    label: "emerald felt",
-    light: "#ead9b0",
-    dark: "#3a5a3a",
-    frame: "#1a120a",
-    frame2: "#3a2414",
-    pieceDark: "ink",
-  },
-  rose: {
-    label: "rose velvet",
-    light: "#f2d7de",
-    dark: "#8f4f69",
-    frame: "#241116",
-    frame2: "#512433",
-    pieceDark: "ink",
-  },
-};
-
 interface MoveLog {
   side: Side;
   from: Coord;
@@ -114,7 +59,7 @@ interface ComboState {
 }
 
 interface PlayerCardProps {
-  agent?: Agent;
+  agent?: PlayableAgentProfile;
   name: string;
   tagline: string;
   captured: number;
@@ -202,7 +147,7 @@ function fmtClock(s: number) {
 
 interface PostGameProps {
   status: Side | "draw";
-  agent: Agent;
+  agent: PlayableAgentProfile;
   moves: number;
   onExit: () => void;
   onRematch: () => void;
@@ -211,8 +156,7 @@ interface PostGameProps {
 function PostGame({ status, agent, moves, onExit, onRematch }: PostGameProps) {
   const lost = status === "black";
   const won = status === "red";
-  const lossEmoji =
-    agent.id === "masaki" ? "😘" : agent.id === "tabata" ? "🍺" : "😂";
+  const lossEmoji = agent.lossEmoji;
 
   // Intentional non-determinism for the falling-emoji effect. Computed once
   // per mount via a lazy useState initializer so re-renders don't reshuffle.
@@ -308,16 +252,9 @@ function PostGame({ status, agent, moves, onExit, onRematch }: PostGameProps) {
   );
 }
 
-export default function Arena({
-  agentId = "sinza",
-  boardStyle = "emerald",
-}: {
-  agentId?: string;
-  boardStyle?: string;
-}) {
+export default function Arena({ agent }: { agent: PlayableAgentProfile }) {
   const router = useRouter();
-  const agent = AGENTS[agentId] || AGENTS.sinza;
-  const bs = BOARD_STYLES[boardStyle] || BOARD_STYLES.emerald;
+  const bs = BOARD_STYLES[agent.boardStyle];
 
   // ── Anonymous identity ────────────────────────────────────────
   // anonId is generated/read on first paint so the player record stays
@@ -385,13 +322,12 @@ export default function Arena({
     startGame({
       anonId,
       agentId: agent.id,
-      agentDisplayName: agent.name,
     })
       .then((id) => setGameId(id))
       .finally(() => {
         startingRef.current = false;
       });
-  }, [anonId, player, gameId, gameKey, startGame, agent.id, agent.name]);
+  }, [anonId, player, gameId, gameKey, startGame, agent.id]);
 
   // Plain navigation — no forfeit. Used when the game is already in a
   // terminal state (PostGame screen) where handleGameEnd has written or
@@ -456,7 +392,6 @@ export default function Arena({
       <ArenaGame
         key={gameKey}
         agent={agent}
-        boardStyle={boardStyle}
         bs={bs}
         onExit={onExit}
         onForfeitAndExit={onForfeitAndExit}
@@ -469,15 +404,13 @@ export default function Arena({
 
 function ArenaGame({
   agent,
-  boardStyle,
   bs,
   onExit,
   onForfeitAndExit,
   onRematch,
   onGameEnd,
 }: {
-  agent: Agent;
-  boardStyle: string;
+  agent: PlayableAgentProfile;
   bs: BoardStyle;
   onExit: () => void;
   onForfeitAndExit: (moves: number) => void;
@@ -567,11 +500,6 @@ function ArenaGame({
     (next: PlayTurnResponse) => {
       setApiState(next.state);
       setLegal(next.legal_moves);
-      const w = apiWinnerToUi(next.winner);
-      if (w) {
-        setStatus(w);
-        return;
-      }
       if (next.agent_move) {
         const fromCoord = squareToCoord(next.agent_move.path[0]);
         const toCoord = squareToCoord(
@@ -597,11 +525,15 @@ function ArenaGame({
           });
         }
       }
+      const w = apiWinnerToUi(next.winner);
+      if (w) {
+        setStatus(w);
+      }
     },
     [],
   );
 
-  // Boot: fetch initial state, then if it's the AI's turn, ask sinza to open.
+  // Boot: fetch initial state, then if it's the agent's turn, ask it to open.
   useEffect(() => {
     const ctrl = new AbortController();
     let cancelled = false;
@@ -617,8 +549,8 @@ function ArenaGame({
         setLegal(lm.legal_moves);
         setBoot("ready");
 
-        // If sinza opens (API initial state has side_to_move === "red" today),
-        // trigger the agent move right away.
+        // If the opening move belongs to the agent, trigger it right away so
+        // the board reflects the authoritative engine state.
         if (initialUiTurn === "black") {
           setPending(true);
           try {
@@ -716,7 +648,8 @@ function ArenaGame({
           setPending(true);
 
           try {
-            // One backend round trip: confirm the human move and get Sinza's reply.
+            // One backend round trip: confirm the human move and get the
+            // selected agent's reply.
             const turnResp = await playTurnApi(agent.id, previous, mv.pdn);
             applyPlayTurnResponse(turnResp);
           } catch (e) {
@@ -765,10 +698,13 @@ function ArenaGame({
   const ranks = [8, 7, 6, 5, 4, 3, 2, 1];
 
   return (
-    <div
-      className={
-        "ar-arena ar-board-" + boardStyle + " ar-piece-dark-" + bs.pieceDark
-      }
+      <div
+        className={
+          "ar-arena ar-board-" +
+          agent.boardStyle +
+          " ar-piece-dark-" +
+          bs.pieceDark
+        }
       style={
         {
           "--ar-board-light": bs.light,
@@ -817,7 +753,7 @@ function ArenaGame({
                 <span className="ar-log-side">
                   {h.side === "red"
                     ? "you"
-                    : agent.name.split(" ")[0].toLowerCase()}
+                    : agent.displayName.toLowerCase()}
                 </span>
                 <span className="ar-log-move">
                   {files[h.from[1]]}
