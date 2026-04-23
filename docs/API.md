@@ -48,6 +48,11 @@ The live engine currently serves the Tanzanian-style 8x8 variant used by the pro
 - kings are flying kings and can travel multiple empty diagonal squares
 - kings can capture from distance and may land on any empty square beyond the captured piece
 - during a multi-capture sequence, captured pieces stay on the board until the sequence is finished
+- draw adjudication is engine-owned:
+  - repeated positions draw on the configured repetition count
+  - games draw after the global quiet-move limit with no captures or promotions
+  - bare king vs bare king draws immediately
+  - lone-king low-material endgames against at most three opposing pieces with an opposing king draw after the shorter low-material quiet-move limit
 
 Frontend code should treat all legality and landing-square generation as engine-owned behavior.
 
