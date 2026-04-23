@@ -47,10 +47,6 @@ interface AgentProfileBase {
   lossEmoji: string;
   game: "Checkers";
   status: "live" | "training";
-  elo: string;
-  games: string;
-  winRate: string;
-  params: string;
   version: string;
   bio: string;
   style: string;
@@ -79,10 +75,6 @@ const AGENT_CATALOG = {
     lossEmoji: "😘",
     game: "Checkers",
     status: "live",
-    elo: "2,211",
-    games: "9,402",
-    winRate: "91.4%",
-    params: "61M",
     version: "v0.6",
     bio: "Masaki doesn't perform. She closes. You get one loose diagonal, one lazy king path, and suddenly the room is hers.",
     style: "clinical · punishes drift",
@@ -99,10 +91,6 @@ const AGENT_CATALOG = {
     lossEmoji: "🍺",
     game: "Checkers",
     status: "live",
-    elo: "1,984",
-    games: "6,188",
-    winRate: "87.2%",
-    params: "61M",
     version: "v0.4",
     bio: "Tokea uswazi siachi ukoko. Tokea mageto huu ndo mtoko, matendo sina ropo ropo.",
     style: "patient · owns the tempo",
@@ -119,10 +107,6 @@ const AGENT_CATALOG = {
     lossEmoji: "😂",
     game: "Checkers",
     status: "live",
-    elo: "2,418",
-    games: "41,287",
-    winRate: "96.9%",
-    params: "61M",
     version: "v1",
     bio: "Sinza is here for the audience, not the game. He'll let you king him just to make the comeback uglier. He's never lost a rematch. He's never offered one either.",
     style: "aggressive · loves forced captures",
@@ -139,10 +123,6 @@ const AGENT_CATALOG = {
     lossEmoji: "😂",
     game: "Checkers",
     status: "training",
-    elo: "—",
-    games: "—",
-    winRate: "—",
-    params: "61M",
     version: "v0.7",
     bio: "Mze Manzese is back in the room, still reading the board like it owes him rent. He's in training for the next release.",
     style: "in training · old-school pressure",

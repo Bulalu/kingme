@@ -169,7 +169,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 demoSpeedMs={850}
               />
               <div className="km-board-footer">
-                <span>{`agent · ${FEATURED_AGENT.id}-${FEATURED_AGENT.version.toLowerCase()} · ${FEATURED_AGENT.params} params`}</span>
+                <span>{`agent · ${FEATURED_AGENT.id}-${FEATURED_AGENT.version.toLowerCase()} · live engine`}</span>
                 <span>difficulty · hard</span>
               </div>
             </div>
