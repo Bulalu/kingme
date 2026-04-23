@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
+import { FEATURED_AGENT, getAgentPath } from "@/lib/agents";
 import {
   Hero,
   Marquee,
@@ -32,7 +33,7 @@ function Nav() {
           <a>leaderboard</a>
           <a>for devs</a>
         </div>
-        <Link className="km-nav-cta" href="/sinza">
+        <Link className="km-nav-cta" href={getAgentPath(FEATURED_AGENT.id)}>
           king me →
         </Link>
       </div>

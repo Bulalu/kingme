@@ -7,23 +7,26 @@ Use it when building:
 - the Next.js frontend
 - Convex actions that call the engine
 - test harnesses
-- other agent workflows that need to validate moves or ask Sinza for a reply
+- other agent workflows that need to validate moves or ask a released bot for a reply
 
 Base URL examples:
 
 - local: `http://127.0.0.1:8051`
 - Modal: `https://ctrlx--kingme-engine-api.modal.run`
 
-## Current Public Agent
+## Current Public Agents
 
-The current public bot is:
+The current public bots are:
 
 - `sinza`
+- `masaki`
+- `tabata`
 
-At the moment, `sinza` is backed by:
+At the moment, they are backed by:
 
-- `engine: alphabeta`
-- `depth: 7`
+- `sinza` → `engine: alphabeta`, `depth: 7`
+- `masaki` → `engine: alphabeta`, `depth: 5`
+- `tabata` → `engine: alphabeta`, `depth: 4`
 
 Clients should not hardcode search internals beyond what the API returns. Treat the API as the source of truth.
 
@@ -200,14 +203,32 @@ Current expected response:
     "depth": 7,
     "ready": true,
     "public": true
+  },
+  {
+    "id": "masaki",
+    "display_name": "Masaki",
+    "description": "Masaki is all timing and pressure. She doesn't rush the board. She makes the board rush you.",
+    "engine": "alphabeta",
+    "depth": 5,
+    "ready": true,
+    "public": true
+  },
+  {
+    "id": "tabata",
+    "display_name": "Tabata",
+    "description": "Tabata plays like the room already belongs to him. Calm hand, sharp eye, no wasted moves.",
+    "engine": "alphabeta",
+    "depth": 4,
+    "ready": true,
+    "public": true
   }
 ]
 ```
 
 Notes:
 
-- today, this will return only `sinza`
-- do not assume that forever; still consume it as a list
+- today, this returns `sinza`, `masaki`, and `tabata`
+- do not hardcode that set forever; still consume it as a list
 
 ### `GET /v1/state/initial`
 
@@ -445,7 +466,7 @@ Response:
 Use this when:
 
 - the human finishes their turn
-- the UI needs Sinza’s reply
+- the UI needs the selected agent's reply
 - you want bot search metadata for a developer overlay
 
 ## Expected Client Game Loop
@@ -457,7 +478,7 @@ Recommended loop for the frontend:
 3. Call `POST /v1/state/legal-moves`
 4. Let the user pick one of the returned `legal_moves`
 5. Call `POST /v1/play-turn` with:
-   - `agent_id: "sinza"`
+   - `agent_id: "<released agent id>"`
    - current state
    - chosen `move_pdn`
 6. Replace local state with returned `state`
@@ -489,7 +510,7 @@ Example error response:
 
 If another coding agent is integrating with this API, it should assume:
 
-- `sinza` is the only public launch bot for now
+- the set of public agents comes from `GET /v1/agents`
 - the engine API owns legality and state transitions
 - `StatePayload` must be preserved exactly
 - `move_pdn` is the canonical write format
@@ -562,7 +583,7 @@ List agents:
 curl -sS https://ctrlx--kingme-engine-api.modal.run/v1/agents
 ```
 
-Ask Sinza for a move:
+Ask a released agent for a move:
 
 ```bash
 curl -sS https://ctrlx--kingme-engine-api.modal.run/v1/agent-move \
@@ -588,7 +609,7 @@ curl -sS https://ctrlx--kingme-engine-api.modal.run/v1/agent-move \
   }'
 ```
 
-Play a full human turn and get Sinza's reply:
+Play a full human turn and get an agent reply:
 
 ```bash
 curl -sS https://ctrlx--kingme-engine-api.modal.run/v1/play-turn \

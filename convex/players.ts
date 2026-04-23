@@ -2,8 +2,8 @@ import { v } from "convex/values";
 import { mutation, query } from "./_generated/server";
 import { rateLimiter } from "./rateLimits";
 
-// One-shot upsert keyed on the browser's anonId. Used on every /sinza boot
-// so we always end up with a stable players row before a game begins.
+// One-shot upsert keyed on the browser's anonId. Used on every arena boot so
+// we always end up with a stable players row before a game begins.
 export const upsert = mutation({
   args: {
     anonId: v.string(),

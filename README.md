@@ -15,11 +15,20 @@ The goal is simple:
 
 This repo is where the product gets assembled. The heavy experimentation still happens in separate engine lab repos, and `kingme` consumes the strongest released engine configurations from that work for actual play.
 
-**Try it**: [kingme.dev/sinza](https://kingme.dev/sinza) — no sign-up.
+**Try it**:
+- [kingme.dev/sinza](https://kingme.dev/sinza)
+- [kingme.dev/masaki](https://kingme.dev/masaki)
+- [kingme.dev/tabata](https://kingme.dev/tabata)
 
-## What Powers Sinza Today
+## What Powers The Live Checkers Agents Today
 
-`sinza` is currently served through our Python engine API and runs on our production alpha-beta checkers engine, playing the Tanzanian-style 8×8 draughts variant (flying kings, mandatory captures, captures remain on the board until a multi-jump sequence completes).
+The current public checkers lineup is:
+
+- `sinza` — alpha-beta depth `7`
+- `masaki` — alpha-beta depth `5`
+- `tabata` — alpha-beta depth `4`
+
+All three are served through our Python engine API and run on the production alpha-beta checkers engine, playing the Tanzanian-style 8×8 draughts variant (flying kings, mandatory captures, captures remain on the board until a multi-jump sequence completes).
 
 We also keep a separate research/training stack where we experiment with self-play, neural guidance, and future checkpoint-backed agents. That research path has not been promoted into production yet.
 
@@ -29,7 +38,8 @@ Today that means:
 - Convex owns product state and realtime app data (players, games, leaderboard)
 - the Python `engine-api` owns legal moves, state transitions, and bot replies
 - checkers is the first live game, not the only planned one
-- `sinza` is just the first public agent, not the last one
+- `sinza`, `masaki`, and `tabata` are the current public checkers agents
+- more public agents will follow
 
 ## What this repo is (and isn't)
 
@@ -98,7 +108,7 @@ npx convex dev
 pnpm --filter @kingme/web dev
 ```
 
-Open http://localhost:3000 — the landing page reads live counters from your Convex dev deployment. `/sinza` opens the play view, which by default hits our public engine at `https://ctrlx--kingme-engine-api.modal.run`. Override by setting `NEXT_PUBLIC_ENGINE_BASE_URL` in `apps/web/.env.local` if you're running the engine yourself.
+Open http://localhost:3000 — the landing page reads live counters from your Convex dev deployment. `/sinza`, `/masaki`, and `/tabata` open the play views, which by default hit our public engine at `https://ctrlx--kingme-engine-api.modal.run`. Override by setting `NEXT_PUBLIC_ENGINE_BASE_URL` in `apps/web/.env.local` if you're running the engine yourself.
 
 ### Engine API (optional)
 

@@ -19,7 +19,7 @@ Open http://localhost:3000.
 
 The landing page is a faithful port of the design package (sections.jsx,
 checkers.jsx, styles.css). The in-hero checkers board is a self-contained
-demo bot, **not** the live `sinza` engine — it exists only to make the
+demo bot, **not** the live engine service — it exists only to make the
 landing page interactive. The real engine lives at `apps/engine-api` and
 is the source of truth for legal moves and state transitions (see
 [docs/API.md](../../docs/API.md)).

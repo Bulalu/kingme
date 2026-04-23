@@ -9,6 +9,7 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import Board from "./Board";
+import { AGENT_ROSTER, FEATURED_AGENT, getAgentPath } from "@/lib/agents";
 
 // ── Hero ───────────────────────────────────────────────────────
 export interface HeroProps {
@@ -32,17 +33,24 @@ function fmtPct(n: number, d: number) {
 export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
   // Live agent counters from Convex. Falls back to hardcoded copy until
   // the first game is recorded (or while the query is loading).
-  const sinzaStats = useQuery(api.agents.getByAgentId, { agentId: "sinza" });
-  const sinzaGames = sinzaStats ? fmtInt(sinzaStats.gamesPlayed) : "0";
-  const sinzaWinRate =
-    sinzaStats && sinzaStats.gamesPlayed > 0
-      ? fmtPct(sinzaStats.wins, sinzaStats.gamesPlayed)
+  const featuredAgentStats = useQuery(api.agents.getByAgentId, {
+    agentId: FEATURED_AGENT.id,
+  });
+  const featuredAgentGames = featuredAgentStats
+    ? fmtInt(featuredAgentStats.gamesPlayed)
+    : "0";
+  const featuredAgentWinRate =
+    featuredAgentStats && featuredAgentStats.gamesPlayed > 0
+      ? fmtPct(featuredAgentStats.wins, featuredAgentStats.gamesPlayed)
       : "—";
   const humansWonRate =
-    sinzaStats && sinzaStats.gamesPlayed > 0
-      ? fmtPct(sinzaStats.losses, sinzaStats.gamesPlayed)
+    featuredAgentStats && featuredAgentStats.gamesPlayed > 0
+      ? fmtPct(featuredAgentStats.losses, featuredAgentStats.gamesPlayed)
       : "—";
-  const totalMoves = sinzaStats ? fmtInt(sinzaStats.totalMoves) : "—";
+  const totalMoves = featuredAgentStats
+    ? fmtInt(featuredAgentStats.totalMoves)
+    : "—";
+  const featuredAgentLabel = FEATURED_AGENT.displayName.toLowerCase();
   const taunts: Record<
     string,
     {
@@ -55,19 +63,19 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
     }
   > = {
     cocky: {
-      kicker: "meet sinza · your first problem",
+      kicker: `meet ${featuredAgentLabel} · your first problem`,
       line1: "KING",
       line2: "ME.",
       sub: "AI agents that trained themselves. Now they're looking for a game.",
-      cta: "play sinza",
+      cta: `play ${featuredAgentLabel}`,
       cta2: "watch him play himself",
     },
     dry: {
-      kicker: "sinza · checkers agent · v3",
+      kicker: `${featuredAgentLabel} · checkers agent · v3`,
       line1: "PLAY",
-      line2: "SINZA.",
+      line2: `${FEATURED_AGENT.name}.`,
       sub: "Trained from scratch on self-play. No opening books, no lookup tables — just a network that taught itself checkers.",
-      cta: "play sinza",
+      cta: `play ${featuredAgentLabel}`,
       cta2: "watch demo",
     },
   };
@@ -88,7 +96,10 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <p className="km-hero-sub">{t.sub}</p>
 
           <div className="km-hero-ctas">
-            <Link className="km-btn km-btn-primary" href="/sinza">
+            <Link
+              className="km-btn km-btn-primary"
+              href={getAgentPath(FEATURED_AGENT.id)}
+            >
               {`▶ ${t.cta}`}
             </Link>
             <button
@@ -104,7 +115,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           </div>
 
           <div className="km-hero-meta">
-            <Stat label="games played vs bot" value={sinzaGames} />
+            <Stat label="games played vs bot" value={featuredAgentGames} />
             <Stat label="humans who won" value={humansWonRate} />
             <Stat label="moves he's made" value={totalMoves} />
           </div>
@@ -114,26 +125,26 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <div className="km-hero-opponent">
             <div className="km-opp-portrait">
               <Image
-                src="/assets/sinza.webp"
-                alt="Sinza"
+                src={FEATURED_AGENT.img}
+                alt={FEATURED_AGENT.displayName}
                 fill
                 sizes="88px"
                 priority
               />
               <div className="km-opp-badge">● LIVE</div>
             </div>
-            <div className="km-opp-meta">
-              <div className="km-opp-label">your opponent</div>
-              <div className="km-opp-name">SINZA</div>
-              <div className="km-opp-stats">
-                <span>
-                  <b>{sinzaGames}</b> games
-                </span>
-                <span>·</span>
-                <span>
-                  <b>{sinzaWinRate}</b> win rate
-                </span>
-              </div>
+              <div className="km-opp-meta">
+                <div className="km-opp-label">your opponent</div>
+                <div className="km-opp-name">{FEATURED_AGENT.name}</div>
+                <div className="km-opp-stats">
+                  <span>
+                    <b>{featuredAgentGames}</b> games
+                  </span>
+                  <span>·</span>
+                  <span>
+                    <b>{featuredAgentWinRate}</b> win rate
+                  </span>
+                </div>
               <div className="km-opp-quote">&ldquo;njoo tuzinese wewe.....&rdquo;</div>
             </div>
           </div>
@@ -143,7 +154,9 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 <span className="km-chrome-dot" />
                 <span className="km-chrome-dot" />
                 <span className="km-chrome-dot" />
-                <span className="km-chrome-title">kingme://sinza/live</span>
+                <span className="km-chrome-title">
+                  {`kingme://${FEATURED_AGENT.id}/live`}
+                </span>
                 <span className="km-chrome-badge">
                   {mode === "play" ? "● LIVE" : "● DEMO"}
                 </span>
@@ -156,7 +169,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 demoSpeedMs={850}
               />
               <div className="km-board-footer">
-                <span>agent · sinza-v1 · 61M params</span>
+                <span>{`agent · ${FEATURED_AGENT.id}-${FEATURED_AGENT.version.toLowerCase()} · ${FEATURED_AGENT.params} params`}</span>
                 <span>difficulty · hard</span>
               </div>
             </div>
@@ -213,68 +226,6 @@ export function Marquee() {
 
 // ── Roster (the agents) ────────────────────────────────────────
 export function Roster() {
-  const agents = [
-    {
-      id: "masaki",
-      img: "/assets/masaki.png",
-      name: "MASAKI",
-      tagline: "the closer",
-      game: "Checkers",
-      status: "live" as const,
-      elo: "2,211",
-      games: "9,402",
-      winRate: "91.4%",
-      params: "61M",
-      version: "v0.6",
-      bio: "Masaki doesn't perform. She closes. You get one loose diagonal, one lazy king path, and suddenly the room is hers.",
-      style: "clinical · punishes drift",
-    },
-    {
-      id: "tabata",
-      img: "/assets/tabata.png",
-      name: "TABATA",
-      tagline: "the landlord",
-      game: "Checkers",
-      status: "live" as const,
-      elo: "1,984",
-      games: "6,188",
-      winRate: "87.2%",
-      params: "61M",
-      version: "v0.4",
-      bio: "Tokea uswazi siachi ukoko. Tokea mageto huu ndo mtoko, matendo sina ropo ropo.",
-      style: "patient · owns the tempo",
-    },
-    {
-      id: "sinza",
-      img: "/assets/sinza.webp",
-      name: "SINZA",
-      tagline: "the showman",
-      game: "Checkers",
-      status: "live" as const,
-      elo: "2,418",
-      games: "41,287",
-      winRate: "96.9%",
-      params: "61M",
-      version: "v1",
-      bio: "Sinza is here for the audience, not the game. He'll let you king him just to make the comeback uglier. He's never lost a rematch. He's never offered one either.",
-      style: "aggressive · loves forced captures",
-    },
-    {
-      id: "manzese",
-      img: "/assets/manzese.webp",
-      name: "MZE MANZESE",
-      tagline: "the old man",
-      game: "Checkers",
-      status: "training" as const,
-      elo: "—",
-      games: "—",
-      winRate: "—",
-      params: "61M",
-      version: "v0.7",
-      bio: "Mze Manzese is back in the room, still reading the board like it owes him rent. He's in training for the next release.",
-      style: "in training · old-school pressure",
-    },
-  ];
   return (
     <section className="km-section km-roster" data-screen-label="03 Agents">
       <SectionHead
@@ -288,7 +239,7 @@ export function Roster() {
         sub="Every game on kingme gets its own agent — its own training run, its own personality, its own way of making you lose. Here are the first four."
       />
       <div className="km-roster-grid">
-        {agents.map((a) => (
+        {AGENT_ROSTER.map((a) => (
           <article key={a.id} className={"km-agent km-agent-" + a.status}>
             <div className="km-agent-portrait">
               <Image
@@ -317,7 +268,7 @@ export function Roster() {
                 {a.status === "live" ? (
                   <Link
                     className="km-btn km-btn-primary km-btn-sm"
-                    href={`/${a.id}`}
+                    href={getAgentPath(a.id)}
                   >
                     play {a.name.toLowerCase()} →
                   </Link>
@@ -399,8 +350,8 @@ export function Leaderboard() {
     >
       <SectionHead
         kicker="leaderboard"
-        title="Who's actually beaten him."
-        sub="Every human who's finished a game against sinza. The ones still at 0 wins are the evidence."
+        title="Who's actually won."
+        sub="Every human who's finished a game against a live kingme agent. The ones still at 0 wins are the evidence."
       />
       <div className="km-lb-wrap">
         <div className="km-lb-header">
@@ -476,7 +427,7 @@ export function Leaderboard() {
         {empty && (
           <Link
             className="km-btn km-btn-primary km-btn-sm"
-            href="/sinza"
+            href={getAgentPath(FEATURED_AGENT.id)}
           >
             be the first →
           </Link>
