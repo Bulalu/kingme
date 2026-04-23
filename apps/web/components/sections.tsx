@@ -9,7 +9,14 @@ import Link from "next/link";
 import { useQuery } from "convex/react";
 import { api } from "@convex/_generated/api";
 import Board from "./Board";
-import { AGENT_ROSTER, FEATURED_AGENT, getAgentPath } from "@/lib/agents";
+import {
+  AGENT_ROSTER,
+  FEATURED_AGENT,
+  PLAYABLE_AGENTS,
+  getAgentPath,
+  type PlayableAgentId,
+  type PlayableAgentProfile,
+} from "@/lib/agents";
 
 // ── Hero ───────────────────────────────────────────────────────
 export interface HeroProps {
@@ -30,27 +37,58 @@ function fmtPct(n: number, d: number) {
   return pct >= 10 ? `${pct.toFixed(0)}%` : `${pct.toFixed(1)}%`;
 }
 
+interface AgentStats {
+  gamesPlayed: number;
+  wins: number;
+  losses: number;
+  totalMoves: number;
+}
+
+function slotNumber(i: number) {
+  return (i + 1).toString().padStart(2, "0");
+}
+
+function winPctValue(stats: AgentStats | undefined) {
+  if (!stats || stats.gamesPlayed <= 0) return 0;
+  return Math.round((stats.wins / stats.gamesPlayed) * 100);
+}
+
 export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
-  // Live agent counters from Convex. Falls back to hardcoded copy until
-  // the first game is recorded (or while the query is loading).
-  const featuredAgentStats = useQuery(api.agents.getByAgentId, {
-    agentId: FEATURED_AGENT.id,
-  });
-  const featuredAgentGames = featuredAgentStats
-    ? fmtInt(featuredAgentStats.gamesPlayed)
-    : "0";
-  const featuredAgentWinRate =
-    featuredAgentStats && featuredAgentStats.gamesPlayed > 0
-      ? fmtPct(featuredAgentStats.wins, featuredAgentStats.gamesPlayed)
+  // One Convex round-trip for all live agents; map by agentId for cheap lookup.
+  const allAgentStats = useQuery(api.agents.list, {});
+  const statsById = useMemo(() => {
+    const map = new Map<string, AgentStats>();
+    if (allAgentStats) {
+      for (const row of allAgentStats) {
+        map.set(row.agentId, {
+          gamesPlayed: row.gamesPlayed,
+          wins: row.wins,
+          losses: row.losses,
+          totalMoves: row.totalMoves,
+        });
+      }
+    }
+    return map;
+  }, [allAgentStats]);
+
+  const [activeAgentId, setActiveAgentId] = useState<PlayableAgentId>(
+    FEATURED_AGENT.id,
+  );
+  const activeAgent: PlayableAgentProfile =
+    PLAYABLE_AGENTS.find((a) => a.id === activeAgentId) ?? FEATURED_AGENT;
+  const activeStats = statsById.get(activeAgent.id);
+  const activeGames = activeStats ? fmtInt(activeStats.gamesPlayed) : "0";
+  const activeWinRate =
+    activeStats && activeStats.gamesPlayed > 0
+      ? fmtPct(activeStats.wins, activeStats.gamesPlayed)
       : "—";
   const humansWonRate =
-    featuredAgentStats && featuredAgentStats.gamesPlayed > 0
-      ? fmtPct(featuredAgentStats.losses, featuredAgentStats.gamesPlayed)
+    activeStats && activeStats.gamesPlayed > 0
+      ? fmtPct(activeStats.losses, activeStats.gamesPlayed)
       : "—";
-  const totalMoves = featuredAgentStats
-    ? fmtInt(featuredAgentStats.totalMoves)
-    : "—";
-  const featuredAgentLabel = FEATURED_AGENT.displayName.toLowerCase();
+  const totalMoves = activeStats ? fmtInt(activeStats.totalMoves) : "—";
+  const activeWinPct = winPctValue(activeStats);
+  const activeAgentLabel = activeAgent.displayName.toLowerCase();
   const taunts: Record<
     string,
     {
@@ -63,19 +101,19 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
     }
   > = {
     cocky: {
-      kicker: `meet ${featuredAgentLabel} · your first problem`,
+      kicker: `meet ${activeAgentLabel} · your first problem`,
       line1: "KING",
       line2: "ME.",
       sub: "AI agents that trained themselves. Now they're looking for a game.",
-      cta: `play ${featuredAgentLabel}`,
-      cta2: "watch him play himself",
+      cta: `play ${activeAgentLabel}`,
+      cta2: "watch them play themselves",
     },
     dry: {
-      kicker: `${featuredAgentLabel} · checkers agent · v3`,
+      kicker: `${activeAgentLabel} · checkers agent · ${activeAgent.version}`,
       line1: "PLAY",
-      line2: `${FEATURED_AGENT.name}.`,
+      line2: `${activeAgent.name}.`,
       sub: "Trained from scratch on self-play. No opening books, no lookup tables — just a network that taught itself checkers.",
-      cta: `play ${featuredAgentLabel}`,
+      cta: `play ${activeAgentLabel}`,
       cta2: "watch demo",
     },
   };
@@ -98,7 +136,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <div className="km-hero-ctas">
             <Link
               className="km-btn km-btn-primary"
-              href={getAgentPath(FEATURED_AGENT.id)}
+              href={getAgentPath(activeAgent.id)}
             >
               {`▶ ${t.cta}`}
             </Link>
@@ -115,61 +153,135 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           </div>
 
           <div className="km-hero-meta">
-            <Stat label="games played vs bot" value={featuredAgentGames} />
+            <Stat label="games played vs bot" value={activeGames} />
             <Stat label="humans who won" value={humansWonRate} />
-            <Stat label="moves he's made" value={totalMoves} />
+            <Stat label="moves made" value={totalMoves} />
           </div>
         </div>
 
         <div className="km-hero-right">
-          <div className="km-hero-opponent">
-            <div className="km-opp-portrait">
-              <Image
-                src={FEATURED_AGENT.img}
-                alt={FEATURED_AGENT.displayName}
-                fill
-                sizes="88px"
-                priority
-              />
-              <div className="km-opp-badge">● LIVE</div>
-            </div>
+          <div className="km-dossier">
+            <div className="km-dossier-active" key={activeAgent.id}>
+              <div className="km-slot-ledger">
+                <span className="km-slot-num km-slot-num-active">
+                  {slotNumber(
+                    PLAYABLE_AGENTS.findIndex((a) => a.id === activeAgent.id),
+                  )}
+                </span>
+                <span className="km-slot-tick" />
+              </div>
+              <div className="km-opp-portrait">
+                <Image
+                  src={activeAgent.img}
+                  alt={activeAgent.displayName}
+                  fill
+                  sizes="88px"
+                  priority
+                />
+                <div className="km-opp-badge">● LIVE</div>
+              </div>
               <div className="km-opp-meta">
                 <div className="km-opp-label">your opponent</div>
-                <div className="km-opp-name">{FEATURED_AGENT.name}</div>
+                <div className="km-opp-name">{activeAgent.name}</div>
                 <div className="km-opp-stats">
                   <span>
-                    <b>{featuredAgentGames}</b> games
+                    <b>{activeGames}</b> games
                   </span>
                   <span>·</span>
                   <span>
-                    <b>{featuredAgentWinRate}</b> win rate
+                    <b>{activeWinRate}</b> win rate
                   </span>
                 </div>
-              <div className="km-opp-quote">&ldquo;njoo tuzinese wewe.....&rdquo;</div>
+                <div className="km-winbar">
+                  <div
+                    className="km-winbar-fill"
+                    style={{ width: `${activeWinPct}%` }}
+                  />
+                </div>
+                <div className="km-opp-quote">
+                  &ldquo;{activeAgent.taunt}&rdquo;
+                </div>
+              </div>
+              <span className="km-now-tape">NOW PLAYING</span>
+            </div>
+
+            <div className="km-bench">
+              {PLAYABLE_AGENTS.filter((a) => a.id !== activeAgent.id).map(
+                (agent) => {
+                  const stats = statsById.get(agent.id);
+                  const games = stats ? fmtInt(stats.gamesPlayed) : "0";
+                  const wr =
+                    stats && stats.gamesPlayed > 0
+                      ? fmtPct(stats.wins, stats.gamesPlayed)
+                      : "—";
+                  const pct = winPctValue(stats);
+                  const slotIdx = PLAYABLE_AGENTS.findIndex(
+                    (a) => a.id === agent.id,
+                  );
+                  return (
+                    <button
+                      type="button"
+                      key={agent.id}
+                      className="km-bench-row"
+                      onClick={() => setActiveAgentId(agent.id)}
+                      aria-label={`promote ${agent.displayName} to active opponent`}
+                    >
+                      <span className="km-slot-num">{slotNumber(slotIdx)}</span>
+                      <div className="km-bench-portrait">
+                        <Image
+                          src={agent.img}
+                          alt={agent.displayName}
+                          fill
+                          sizes="48px"
+                        />
+                      </div>
+                      <div className="km-bench-meta">
+                        <div className="km-bench-name">{agent.name}</div>
+                        <div className="km-bench-stats">
+                          <span>{games}g</span>
+                          <span>·</span>
+                          <span>{wr}</span>
+                        </div>
+                        <div className="km-winbar km-winbar-bench">
+                          <div
+                            className="km-winbar-fill"
+                            style={{ width: `${pct}%` }}
+                          />
+                        </div>
+                      </div>
+                      <span className="km-bench-promote">↑ promote</span>
+                    </button>
+                  );
+                },
+              )}
             </div>
           </div>
+
           <div className="km-board-stage">
             <div className="km-board-chrome">
               <div className="km-chrome-row">
                 <span className="km-chrome-dot" />
                 <span className="km-chrome-dot" />
                 <span className="km-chrome-dot" />
-                <span className="km-chrome-title">
-                  {`kingme://${FEATURED_AGENT.id}/live`}
+                <span
+                  className="km-chrome-title km-chrome-flicker"
+                  key={`title-${activeAgent.id}`}
+                >
+                  {`kingme://${activeAgent.id}/live`}
                 </span>
                 <span className="km-chrome-badge">
                   {mode === "play" ? "● LIVE" : "● DEMO"}
                 </span>
               </div>
               <Board
-                key={mode}
+                key={`${mode}-${activeAgent.id}`}
                 mode={mode}
-                size={460}
+                size={420}
                 accent={accent}
                 demoSpeedMs={850}
               />
               <div className="km-board-footer">
-                <span>{`agent · ${FEATURED_AGENT.id}-${FEATURED_AGENT.version.toLowerCase()} · live engine`}</span>
+                <span>{`agent · ${activeAgent.id}-${activeAgent.version.toLowerCase()} · live engine`}</span>
                 <span>difficulty · hard</span>
               </div>
             </div>
