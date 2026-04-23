@@ -161,8 +161,11 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
 
         <div className="km-hero-right">
           <div className="km-dossier">
-            <div className="km-dossier-active" key={activeAgent.id}>
-              <div className="km-slot-ledger">
+            <div className="km-dossier-active">
+              <div
+                className="km-slot-ledger"
+                key={`slot-${activeAgent.id}`}
+              >
                 <span className="km-slot-num km-slot-num-active">
                   {slotNumber(
                     PLAYABLE_AGENTS.findIndex((a) => a.id === activeAgent.id),
@@ -170,27 +173,37 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 </span>
                 <span className="km-slot-tick" />
               </div>
-              <div className="km-opp-portrait">
-                <Image
-                  src={activeAgent.img}
-                  alt={activeAgent.displayName}
-                  fill
-                  sizes="88px"
-                  priority
-                />
-                <div className="km-opp-badge">● LIVE</div>
+              <div
+                className="km-swap km-swap-portrait"
+                key={`portrait-${activeAgent.id}`}
+              >
+                <div className="km-opp-portrait">
+                  <Image
+                    src={activeAgent.img}
+                    alt={activeAgent.displayName}
+                    fill
+                    sizes="88px"
+                    priority
+                  />
+                  <div className="km-opp-badge">● LIVE</div>
+                </div>
               </div>
               <div className="km-opp-meta">
                 <div className="km-opp-label">your opponent</div>
-                <div className="km-opp-name">{activeAgent.name}</div>
-                <div className="km-opp-stats">
-                  <span>
-                    <b>{activeGames}</b> games
-                  </span>
-                  <span>·</span>
-                  <span>
-                    <b>{activeWinRate}</b> win rate
-                  </span>
+                <div
+                  className="km-swap km-swap-text"
+                  key={`text-${activeAgent.id}`}
+                >
+                  <div className="km-opp-name">{activeAgent.name}</div>
+                  <div className="km-opp-stats">
+                    <span>
+                      <b>{activeGames}</b> games
+                    </span>
+                    <span>·</span>
+                    <span>
+                      <b>{activeWinRate}</b> win rate
+                    </span>
+                  </div>
                 </div>
                 <div className="km-winbar">
                   <div
@@ -198,8 +211,13 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                     style={{ width: `${activeWinPct}%` }}
                   />
                 </div>
-                <div className="km-opp-quote">
-                  &ldquo;{activeAgent.taunt}&rdquo;
+                <div
+                  className="km-swap km-swap-quote"
+                  key={`quote-${activeAgent.id}`}
+                >
+                  <div className="km-opp-quote">
+                    &ldquo;{activeAgent.taunt}&rdquo;
+                  </div>
                 </div>
               </div>
               <span className="km-now-tape">NOW PLAYING</span>
@@ -274,7 +292,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
                 </span>
               </div>
               <Board
-                key={`${mode}-${activeAgent.id}`}
+                key={mode}
                 mode={mode}
                 size={420}
                 accent={accent}
