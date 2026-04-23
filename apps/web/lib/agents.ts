@@ -54,6 +54,7 @@ interface AgentProfileBase {
 }
 
 export interface PlayableAgentProfile extends AgentProfileBase {
+  id: PlayableAgentId;
   status: "live";
 }
 

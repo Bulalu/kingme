@@ -136,7 +136,7 @@ export function Hero({ accent, copyVoice, mode, setMode }: HeroProps) {
           <div className="km-hero-ctas">
             <Link
               className="km-btn km-btn-primary"
-              href={getAgentPath(activeAgent.id)}
+              href={getAgentPath(activeAgentId)}
             >
               {`▶ ${t.cta}`}
             </Link>
