@@ -1,7 +1,13 @@
 from __future__ import annotations
 
 from kingme_engine_api.runtime.checkers_v2.action_encoding import coords_to_square
-from kingme_engine_api.runtime.checkers_v2.runtime import RED, WHITE_MAN, CheckersState
+from kingme_engine_api.runtime.checkers_v2.rules import CHECKERS_V2_RULESET
+from kingme_engine_api.runtime.checkers_v2.runtime import (
+    DRAW,
+    RED,
+    WHITE_MAN,
+    CheckersState,
+)
 from kingme_engine_api.runtime.engine import apply_macro_move, legal_macro_moves, structural_balance_terms
 
 
@@ -142,3 +148,62 @@ def test_blocked_flying_king_ray_does_not_count_as_threat() -> None:
     terms = structural_balance_terms(state)
 
     assert terms.threatened_men == 0
+
+
+def test_bare_kings_are_an_immediate_draw() -> None:
+    state = CheckersState.from_rows(
+        (
+            "........",
+            "R.......",
+            "........",
+            "........",
+            "........",
+            "........",
+            "........",
+            "W.......",
+        ),
+        side_to_move=RED,
+    )
+
+    assert state.winner() == DRAW
+    assert legal_macro_moves(state) == []
+
+
+def test_lone_king_low_material_endgame_is_playable_before_draw_limit() -> None:
+    state = CheckersState.from_rows(
+        (
+            ".......W",
+            "........",
+            "...r....",
+            "........",
+            ".r......",
+            "....R...",
+            "........",
+            "........",
+        ),
+        side_to_move=RED,
+        no_progress_count=CHECKERS_V2_RULESET.low_material_draw_halfmoves - 1,
+    )
+
+    assert state.winner() is None
+    assert legal_macro_moves(state)
+
+
+def test_lone_king_low_material_endgame_draws_after_short_quiet_limit() -> None:
+    state = CheckersState.from_rows(
+        (
+            ".......W",
+            "........",
+            "...r....",
+            "........",
+            ".r......",
+            "....R...",
+            "........",
+            "........",
+        ),
+        side_to_move=RED,
+        no_progress_count=CHECKERS_V2_RULESET.low_material_draw_halfmoves,
+    )
+
+    assert state.winner() == DRAW
+    assert legal_macro_moves(state) == []

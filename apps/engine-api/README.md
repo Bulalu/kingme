@@ -81,6 +81,7 @@ The serving engine now follows the local Tanzanian-style 8x8 draughts variant:
 - kings are flying kings and can move diagonally across any number of empty squares
 - kings can capture from distance and land on any empty square beyond the captured piece
 - during a multi-capture sequence, jumped pieces remain on the board until the sequence ends
+- draw adjudication includes threefold-style repetition, a global quiet-move limit, immediate bare-king draws, and a shorter quiet-move limit for lone-king low-material endgames
 
 This rules logic lives in:
 

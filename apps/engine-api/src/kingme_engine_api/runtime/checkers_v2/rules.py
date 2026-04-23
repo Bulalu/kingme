@@ -17,6 +17,7 @@ class Ruleset:
     men_capture_backwards: bool
     repetition_draw_count: int
     no_progress_draw_halfmoves: int
+    low_material_draw_halfmoves: int
     canonical_observation_shape: tuple[int, int, int]
 
 
@@ -31,5 +32,6 @@ CHECKERS_V2_RULESET = Ruleset(
     men_capture_backwards=False,
     repetition_draw_count=3,
     no_progress_draw_halfmoves=80,
+    low_material_draw_halfmoves=32,
     canonical_observation_shape=(8, 8, 8),
 )

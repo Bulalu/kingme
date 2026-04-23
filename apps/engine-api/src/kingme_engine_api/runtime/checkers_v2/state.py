@@ -464,10 +464,7 @@ class CheckersState:
             return
         key = self.position_key()
         self.repetition_counts[key] = self.repetition_counts.get(key, 0) + 1
-        if self.repetition_counts[key] >= CHECKERS_V2_RULESET.repetition_draw_count:
-            self._winner = DRAW
-            return
-        if self.no_progress_count >= CHECKERS_V2_RULESET.no_progress_draw_halfmoves:
+        if self._is_drawn():
             self._winner = DRAW
 
     def _player_has_pieces(self, player: int) -> bool:
@@ -476,7 +473,40 @@ class CheckersState:
     def _is_drawn(self) -> bool:
         if self.no_progress_count >= CHECKERS_V2_RULESET.no_progress_draw_halfmoves:
             return True
-        return self.repetition_counts.get(self.position_key(), 0) >= CHECKERS_V2_RULESET.repetition_draw_count
+        low_material_limit = self._low_material_draw_halfmove_limit()
+        if low_material_limit is not None and self.no_progress_count >= low_material_limit:
+            return True
+        return (
+            self.repetition_counts.get(self.position_key(), 0)
+            >= CHECKERS_V2_RULESET.repetition_draw_count
+        )
+
+    def _low_material_draw_halfmove_limit(self) -> int | None:
+        red_men = red_kings = white_men = white_kings = 0
+        for piece in self.board:
+            if piece == RED_MAN:
+                red_men += 1
+            elif piece == RED_KING:
+                red_kings += 1
+            elif piece == WHITE_MAN:
+                white_men += 1
+            elif piece == WHITE_KING:
+                white_kings += 1
+
+        if red_men + red_kings == 0 or white_men + white_kings == 0:
+            return None
+
+        if red_men == 0 and white_men == 0 and red_kings == 1 and white_kings == 1:
+            return 0
+
+        red_lone_king = red_men == 0 and red_kings == 1
+        white_lone_king = white_men == 0 and white_kings == 1
+        has_lone_king_side = red_lone_king or white_lone_king
+        total_pieces = red_men + red_kings + white_men + white_kings
+        total_kings = red_kings + white_kings
+        if has_lone_king_side and total_pieces <= 4 and total_kings >= 2:
+            return CHECKERS_V2_RULESET.low_material_draw_halfmoves
+        return None
 
     def _should_promote(self, piece: int, destination_square: int) -> bool:
         if _is_king(piece):
