@@ -50,6 +50,7 @@ interface AgentProfileBase {
   version: string;
   bio: string;
   style: string;
+  taunt: string;
 }
 
 export interface PlayableAgentProfile extends AgentProfileBase {
@@ -78,6 +79,7 @@ const AGENT_CATALOG = {
     version: "v0.6",
     bio: "Masaki doesn't perform. She closes. You get one loose diagonal, one lazy king path, and suddenly the room is hers.",
     style: "clinical · punishes drift",
+    taunt: "one loose diagonal. that's all.",
   },
   tabata: {
     id: "tabata",
@@ -94,6 +96,7 @@ const AGENT_CATALOG = {
     version: "v0.4",
     bio: "Tokea uswazi siachi ukoko. Tokea mageto huu ndo mtoko, matendo sina ropo ropo.",
     style: "patient · owns the tempo",
+    taunt: "siachi ukoko.",
   },
   sinza: {
     id: "sinza",
@@ -110,6 +113,7 @@ const AGENT_CATALOG = {
     version: "v1",
     bio: "Sinza is here for the audience, not the game. He'll let you king him just to make the comeback uglier. He's never lost a rematch. He's never offered one either.",
     style: "aggressive · loves forced captures",
+    taunt: "njoo tuzinese wewe.....",
   },
   manzese: {
     id: "manzese",
@@ -126,6 +130,7 @@ const AGENT_CATALOG = {
     version: "v0.7",
     bio: "Mze Manzese is back in the room, still reading the board like it owes him rent. He's in training for the next release.",
     style: "in training · old-school pressure",
+    taunt: "back soon. don't get comfortable.",
   },
 } as const satisfies Record<string, AgentProfile>;
 
